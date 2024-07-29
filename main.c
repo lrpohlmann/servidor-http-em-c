@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,13 @@
 void crash(const char *e) {
   perror(e);
   exit(EXIT_FAILURE);
+}
+
+void print_string_parcial(char *s, int inicio, int fim) {
+  for (int i = inicio; i <= fim; i++) {
+    printf("%c", s[i]);
+  }
+  printf("\n");
 }
 
 char *HTTP_ReceberMensagem(int accept_fd) {
@@ -37,9 +45,32 @@ char *HTTP_ReceberMensagem(int accept_fd) {
     }
   }
 
+  // request-line
+  int inicio = 0;
+  int atual = 0;
+  while (true) {
+    if (buf_recv[inicio] == '\r' || buf_recv[inicio] == '\n') {
+      inicio++;
+      atual = inicio;
+    } else {
+      while (true) {
+        if (buf_recv[atual] == ' ') {
+          break;
+        }
+
+        atual++;
+      }
+
+      print_string_parcial(buf_recv, inicio, atual);
+      break;
+    }
+  }
+  // headers
+  /***
   for (int i = 0; i < total_bytes_recebidos; i++) {
     printf("%c", buf_recv[i]);
   }
+  ***/
 
   return buf_recv;
 }
