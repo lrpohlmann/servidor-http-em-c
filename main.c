@@ -49,28 +49,26 @@ char *HTTP_ReceberMensagem(int accept_fd) {
   int inicio = 0;
   int atual = 0;
   while (true) {
-    if (buf_recv[inicio] == '\r' || buf_recv[inicio] == '\n') {
-      inicio++;
-      atual = inicio;
-    } else {
-      while (true) {
-        if (buf_recv[atual] == ' ') {
-          break;
-        }
-
+    if (buf_recv[atual] == ' ') {
+      print_string_parcial(buf_recv, inicio, atual - 1);
+      atual++;
+      inicio = atual;
+    } else if (buf_recv[atual] == '\r') {
+      print_string_parcial(buf_recv, inicio, atual - 1);
+      atual++;
+      if (buf_recv[atual] == '\n') {
         atual++;
       }
-
-      print_string_parcial(buf_recv, inicio, atual);
       break;
+    } else {
+      atual++;
     }
   }
+
   // headers
-  /***
   for (int i = 0; i < total_bytes_recebidos; i++) {
     printf("%c", buf_recv[i]);
   }
-  ***/
 
   return buf_recv;
 }
