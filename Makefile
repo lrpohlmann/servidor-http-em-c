@@ -1,2 +1,5 @@
+CC = gcc
+CFLAGS = -ggdb -Wall -fsanitize=address
+
 servidor:
-	gcc -g main.c -o main.out
+	$(CC) $(CFLAGS) main.c -o main.out
