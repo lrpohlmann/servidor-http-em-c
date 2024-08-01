@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "libs/stb_ds.h"
+
 void crash(const char *e) {
   perror(e);
   exit(EXIT_FAILURE);
@@ -45,30 +47,45 @@ char *HTTP_ReceberMensagem(int accept_fd) {
     }
   }
 
-  // request-line
-  int inicio = 0;
-  int atual = 0;
-  while (true) {
-    if (buf_recv[atual] == ' ') {
-      print_string_parcial(buf_recv, inicio, atual - 1);
-      atual++;
-      inicio = atual;
-    } else if (buf_recv[atual] == '\r') {
-      print_string_parcial(buf_recv, inicio, atual - 1);
-      atual++;
-      if (buf_recv[atual] == '\n') {
-        atual++;
-      }
-      break;
-    } else {
-      atual++;
-    }
-  }
-
-  // headers
   for (int i = 0; i < total_bytes_recebidos; i++) {
     printf("%c", buf_recv[i]);
   }
+  printf("\n");
+
+  // request-line
+  int inicio = 0;
+  int atual = 0;
+  while (buf_recv[atual] != ' ') {
+    atual++;
+  }
+  print_string_parcial(buf_recv, inicio, atual - 1);
+  atual++;
+  inicio = atual;
+
+  while (buf_recv[atual] == ' ') {
+    atual++;
+  }
+  inicio = atual;
+
+  while (buf_recv[atual] != ' ') {
+    atual++;
+  }
+  print_string_parcial(buf_recv, inicio, atual - 1);
+  atual++;
+  inicio = atual;
+
+  while (buf_recv[atual] == ' ') {
+    atual++;
+  }
+  inicio = atual;
+
+  while (buf_recv[atual] != ' ' && buf_recv[atual] != '\r' &&
+         buf_recv[atual] != '\n') {
+    atual++;
+  }
+  print_string_parcial(buf_recv, inicio, atual - 1);
+  atual++;
+  inicio = atual;
 
   return buf_recv;
 }
