@@ -68,7 +68,10 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   while (buf_request_recebida[atual] != ' ') {
     atual++;
   }
-  print_string_parcial(buf_request_recebida, inicio, atual - 1);
+  char *url = ArenaS_AlocarSetTexto(as, &buf_request_recebida[inicio],
+                                    atual - inicio + 1);
+  url[atual - inicio + 1] = '\0';
+  printf("%s\n", url);
   atual++;
   inicio = atual;
 
@@ -82,7 +85,10 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
          buf_request_recebida[atual] != '\n') {
     atual++;
   }
-  print_string_parcial(buf_request_recebida, inicio, atual - 1);
+  char *http_version = ArenaS_AlocarSetTexto(as, &buf_request_recebida[inicio],
+                                             atual - inicio + 1);
+  http_version[atual - inicio + 1] = '\0';
+  printf("%s\n", http_version);
   atual++;
   inicio = atual;
   return 0;
