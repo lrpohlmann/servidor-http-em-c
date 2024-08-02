@@ -2,4 +2,4 @@ CC = gcc
 CFLAGS = -ggdb -Wall -fsanitize=address
 
 servidor:
-	$(CC) $(CFLAGS) libs/stb_ds.h main.c -o main.out
+	$(CC) $(CFLAGS) alloc/arena.c http/request.c main.c -o main.out
