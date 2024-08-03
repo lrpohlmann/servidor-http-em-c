@@ -8,6 +8,3 @@ typedef struct {
 } ArenaSimples;
 
 char *ArenaS_Alocar(ArenaSimples *as, size_t tamanho_alloc);
-
-char *ArenaS_AlocarSetTexto(ArenaSimples *as, char *texto,
-                            size_t tamanho_texto);
