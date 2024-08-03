@@ -101,8 +101,8 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
          buf_request_recebida[atual] != '\n') {
     atual++;
   }
-  char *http_version = ArenaS_AlocarSetTexto(as, &buf_request_recebida[inicio],
-                                             atual - inicio + 1);
+  char *http_version = ArenaS_Alocar(as, atual - inicio + 1);
+  strncpy(http_version, &buf_request_recebida[inicio], atual - inicio);
   http_version[atual - inicio] = '\0';
   printf("%s\n", http_version);
   atual++;
