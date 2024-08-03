@@ -1,18 +1,12 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "../alloc/arena.h"
 #include "request.h"
 
-void print_string_parcial(char *s, int inicio, int fim) {
-  for (int i = inicio; i <= fim; i++) {
-    printf("%c", s[i]);
-  }
-  printf("\n");
-}
-
-char *HTTP_ReceberMensagem(int accept_fd, size_t *total_bytes_recebidos) {
+char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
   size_t tamanho_buf = 1024;
   char *buf_recv = (char *)malloc(tamanho_buf);
   *total_bytes_recebidos = 0;
@@ -41,11 +35,14 @@ char *HTTP_ReceberMensagem(int accept_fd, size_t *total_bytes_recebidos) {
 }
 
 int HTTP_AnaliseRequest(char *buf_request_recebida,
-                        size_t tamanho_request_recebida, ArenaSimples *as) {
+                        size_t tamanho_request_recebida, Request **request_obj,
+                        ArenaSimples *as) {
   for (int i = 0; i < tamanho_request_recebida; i++) {
     printf("%c", buf_request_recebida[i]);
   }
   printf("\n");
+
+  *request_obj = (Request *)ArenaS_Alocar(as, sizeof(Request));
 
   // request-line
   int inicio = 0;
@@ -53,10 +50,20 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   while (buf_request_recebida[atual] != ' ') {
     atual++;
   }
-  char *method = ArenaS_AlocarSetTexto(as, &buf_request_recebida[inicio],
-                                       atual - inicio + 1);
-  method[atual - inicio + 1] = '\0';
+  char *method = ArenaS_Alocar(as, atual - inicio + 1);
+  strncpy(method, &buf_request_recebida[inicio], atual - inicio);
+  method[atual - inicio] = '\0';
   printf("%s\n", method);
+
+  switch (strcmp(method, "GET")) {
+  case 0:
+    (*request_obj)->method = method;
+    break;
+  default:
+    *request_obj = NULL;
+    return -1;
+  }
+
   atual++;
   inicio = atual;
 
@@ -70,7 +77,7 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   }
   char *url = ArenaS_AlocarSetTexto(as, &buf_request_recebida[inicio],
                                     atual - inicio + 1);
-  url[atual - inicio + 1] = '\0';
+  url[atual - inicio] = '\0';
   printf("%s\n", url);
   atual++;
   inicio = atual;
@@ -87,7 +94,7 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   }
   char *http_version = ArenaS_AlocarSetTexto(as, &buf_request_recebida[inicio],
                                              atual - inicio + 1);
-  http_version[atual - inicio + 1] = '\0';
+  http_version[atual - inicio] = '\0';
   printf("%s\n", http_version);
   atual++;
   inicio = atual;

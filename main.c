@@ -69,8 +69,15 @@ int main() {
     char buf[2048];
     ArenaSimples arena = {.buf = buf, .posicao = 0, .capacidade = 2048};
     size_t bytes_recebidos = 0;
-    char *buf_recv = HTTP_ReceberMensagem(accept_fd, &bytes_recebidos);
-    HTTP_AnaliseRequest(buf_recv, bytes_recebidos, &arena);
+    char *buf_recv = HTTP_ReceberRequest(accept_fd, &bytes_recebidos);
+
+    Request *request_obj;
+    int status_analise_request =
+        HTTP_AnaliseRequest(buf_recv, bytes_recebidos, &request_obj, &arena);
+    if (status_analise_request != 0) {
+      printf("ERRO");
+    }
+
     free((void *)buf_recv);
 
     char resposta[] = "HTTP/1.1 200 OK\r\nContent-Type: "

@@ -9,7 +9,8 @@ typedef struct {
   char *http_version;
 } Request;
 
-char *HTTP_ReceberMensagem(int accept_fd, size_t *total_bytes_recebidos);
+char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos);
 
 int HTTP_AnaliseRequest(char *buf_request_recebida,
-                        size_t tamanho_request_recebida, ArenaSimples *as);
+                        size_t tamanho_request_recebida, Request **request_obj,
+                        ArenaSimples *as);
