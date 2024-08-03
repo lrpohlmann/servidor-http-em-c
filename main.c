@@ -72,10 +72,11 @@ int main() {
     char *buf_recv = HTTP_ReceberRequest(accept_fd, &bytes_recebidos);
 
     Request *request_obj;
-    int status_analise_request =
-        HTTP_AnaliseRequest(buf_recv, bytes_recebidos, &request_obj, &arena);
+    ErroRequest *err_request;
+    int status_analise_request = HTTP_AnaliseRequest(
+        buf_recv, bytes_recebidos, &request_obj, &err_request, &arena);
     if (status_analise_request != 0) {
-      printf("ERRO");
+      printf("ERRO\n");
     }
 
     free((void *)buf_recv);

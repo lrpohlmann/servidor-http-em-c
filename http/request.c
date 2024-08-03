@@ -36,13 +36,14 @@ char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
 
 int HTTP_AnaliseRequest(char *buf_request_recebida,
                         size_t tamanho_request_recebida, Request **request_obj,
-                        ArenaSimples *as) {
+                        ErroRequest **err_request, ArenaSimples *as) {
   for (int i = 0; i < tamanho_request_recebida; i++) {
     printf("%c", buf_request_recebida[i]);
   }
   printf("\n");
 
   *request_obj = (Request *)ArenaS_Alocar(as, sizeof(Request));
+  *err_request = NULL;
 
   // request-line
   int inicio = 0;
@@ -61,6 +62,11 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     break;
   default:
     *request_obj = NULL;
+    *err_request = (ErroRequest *)ArenaS_Alocar(as, sizeof(ErroRequest));
+    strncpy((*err_request)->status, "501", 4);
+    char err_msg[] = "Método não suportado/conhecido.";
+    (*err_request)->descricao = (char *)ArenaS_Alocar(as, strlen(err_msg));
+    strncpy((*err_request)->descricao, err_msg, strlen(err_msg));
     return -1;
   }
 
