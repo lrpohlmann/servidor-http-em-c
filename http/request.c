@@ -48,6 +48,8 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   // request-line
   int inicio = 0;
   int atual = 0;
+
+  // method
   while (buf_request_recebida[atual] != ' ') {
     atual++;
   }
@@ -78,11 +80,12 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   }
   inicio = atual;
 
+  // url
   while (buf_request_recebida[atual] != ' ') {
     atual++;
   }
-  char *url = ArenaS_AlocarSetTexto(as, &buf_request_recebida[inicio],
-                                    atual - inicio + 1);
+  char *url = (char *)ArenaS_Alocar(as, atual - inicio + 1);
+  strncpy(url, &buf_request_recebida[inicio], atual - inicio);
   url[atual - inicio] = '\0';
   printf("%s\n", url);
   atual++;
