@@ -1,10 +1,53 @@
 #include <arpa/inet.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "../alloc/arena.h"
 #include "request.h"
+
+static void p(char *s, int i, int f) {
+  while (i <= f) {
+    printf("%c", s[i]);
+    i++;
+  }
+  printf("\n");
+}
+
+static int analizar_url(char *url, int tamanho, ArenaSimples *as) {
+  if (tamanho == 1) {
+    printf("%c\n", url[0]);
+    return 0;
+  }
+
+  int inicio = 0;
+  int fim = 0;
+  while (inicio < tamanho) {
+    if (url[inicio] == '/') {
+      inicio++;
+      if (url[inicio] == '?') {
+        return 0;
+      }
+      continue;
+    }
+
+    fim = inicio;
+    while (true) {
+      if (url[fim] == '/') {
+        p(url, inicio, fim - 1);
+        inicio = fim;
+        break;
+      } else if (url[fim] == '?' || fim >= tamanho) {
+        p(url, inicio, fim - 1);
+        return 0;
+      }
+
+      fim++;
+    }
+  }
+  return 0;
+}
 
 char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
   size_t tamanho_buf = 1024;
@@ -87,7 +130,8 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   char *url = (char *)ArenaS_Alocar(as, atual - inicio + 1);
   strncpy(url, &buf_request_recebida[inicio], atual - inicio);
   url[atual - inicio] = '\0';
-  printf("%s\n", url);
+  // printf("%s\n", url);
+  analizar_url(url, atual - inicio, as);
   atual++;
   inicio = atual;
 
