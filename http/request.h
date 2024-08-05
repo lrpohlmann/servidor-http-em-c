@@ -5,7 +5,8 @@
 
 typedef struct {
   char *method;
-  char *url;
+  char **url;
+  int url_numero_segmentos;
   char *http_version;
 } Request;
 

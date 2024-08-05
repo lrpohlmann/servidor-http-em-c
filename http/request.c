@@ -15,9 +15,18 @@ static void p(char *s, int i, int f) {
   printf("\n");
 }
 
-static int analizar_url(char *url, int tamanho, ArenaSimples *as) {
+static int analizar_url(char *url, int tamanho, Request *request_obj,
+                        ArenaSimples *as) {
   if (tamanho == 1) {
-    printf("%c\n", url[0]);
+    char *segmento = (char *)ArenaS_Alocar(as, 2);
+    segmento[0] = '/';
+    segmento[1] = '\0';
+
+    char **segmentos_url = (char **)ArenaS_Alocar(as, sizeof(char *));
+    segmentos_url[0] = segmento;
+    request_obj->url = segmentos_url;
+    request_obj->url_numero_segmentos = 1;
+    printf("%c\n", request_obj->url[0][0]);
     return 0;
   }
 
@@ -25,6 +34,8 @@ static int analizar_url(char *url, int tamanho, ArenaSimples *as) {
   int fim = 0;
   while (inicio < tamanho) {
     if (url[inicio] == '/') {
+
+      printf("%c\n", url[inicio]);
       inicio++;
       if (url[inicio] == '?') {
         return 0;
@@ -131,7 +142,7 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   strncpy(url, &buf_request_recebida[inicio], atual - inicio);
   url[atual - inicio] = '\0';
   // printf("%s\n", url);
-  analizar_url(url, atual - inicio, as);
+  analizar_url(url, atual - inicio, *request_obj, as);
   atual++;
   inicio = atual;
 
