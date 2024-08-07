@@ -197,6 +197,7 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     char *http_version = ArenaS_Alocar(as, atual - inicio + 1);
     strncpy(http_version, &buf_request_recebida[inicio], atual - inicio);
     http_version[atual - inicio] = '\0';
+    (*request_obj)->http_version = http_version;
     printf("%s\n", http_version);
 
     atual++;
