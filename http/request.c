@@ -133,7 +133,6 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     char *method = ArenaS_Alocar(as, atual - inicio + 1);
     strncpy(method, &buf_request_recebida[inicio], atual - inicio);
     method[atual - inicio] = '\0';
-    printf("%s\n", method);
 
     switch (strcmp(method, "GET")) {
     case 0:
@@ -170,13 +169,6 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     url[atual - inicio] = '\0';
     analizar_url(url, atual - inicio, *request_obj, as);
 
-    SegmentoUrl *s = (*request_obj)->url;
-    while (s != NULL) {
-      printf("%s ", s->segmento);
-      s = s->proximo;
-    }
-    printf("\n");
-
     atual++;
     inicio = atual;
   }
@@ -199,7 +191,6 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     strncpy(http_version, &buf_request_recebida[inicio], atual - inicio);
     http_version[atual - inicio] = '\0';
     (*request_obj)->http_version = http_version;
-    printf("%s\n", http_version);
 
     atual++;
     inicio = atual;
