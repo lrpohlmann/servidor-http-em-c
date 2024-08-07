@@ -57,6 +57,8 @@ int main() {
     crash("listen");
   }
 
+  char *buf = (char *)malloc(2048);
+  ArenaSimples arena = {.buf = buf, .posicao = 0, .capacidade = 2048};
   while (1) {
     struct sockaddr_storage endereco_cliente;
     socklen_t t = sizeof(endereco_cliente);
@@ -66,8 +68,6 @@ int main() {
       continue;
     }
 
-    char buf[2048];
-    ArenaSimples arena = {.buf = buf, .posicao = 0, .capacidade = 2048};
     size_t bytes_recebidos = 0;
     char *buf_recv = HTTP_ReceberRequest(accept_fd, &bytes_recebidos);
 
@@ -89,8 +89,10 @@ int main() {
     }
 
     close(accept_fd);
+    arena.posicao = 0;
   }
 
+  free((void *)buf);
   freeaddrinfo(r);
 
   return 0;
