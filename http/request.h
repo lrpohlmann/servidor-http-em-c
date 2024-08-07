@@ -3,10 +3,14 @@
 
 #include "../alloc/arena.h"
 
+typedef struct nodo_segmento_url {
+  char *segmento;
+  struct nodo_segmento_url *proximo;
+} SegmentoUrl;
+
 typedef struct {
   char *method;
-  char **url;
-  int url_numero_segmentos;
+  SegmentoUrl *url;
   char *http_version;
 } Request;
 

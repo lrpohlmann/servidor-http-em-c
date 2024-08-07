@@ -7,26 +7,30 @@
 #include "../alloc/arena.h"
 #include "request.h"
 
-static void p(char *s, int i, int f) {
-  while (i <= f) {
-    printf("%c", s[i]);
-    i++;
+SegmentoUrl *adicionar_segmento_url(Request *request, char *url,
+                                    ArenaSimples *as) {
+  SegmentoUrl *novo_segmento =
+      (SegmentoUrl *)ArenaS_Alocar(as, sizeof(SegmentoUrl));
+  novo_segmento->segmento = url;
+  if (request->url == NULL) {
+    request->url = novo_segmento;
+    return novo_segmento;
   }
-  printf("\n");
+
+  SegmentoUrl *atual = request->url;
+  while (atual->proximo != NULL) {
+    atual = atual->proximo;
+  }
+  atual->proximo = novo_segmento;
+  return novo_segmento;
 }
 
 static int analizar_url(char *url, int tamanho, Request *request_obj,
                         ArenaSimples *as) {
   if (tamanho == 1) {
     char *segmento = (char *)ArenaS_Alocar(as, 2);
-    segmento[0] = '/';
-    segmento[1] = '\0';
-
-    char **segmentos_url = (char **)ArenaS_Alocar(as, sizeof(char *));
-    segmentos_url[0] = segmento;
-    request_obj->url = segmentos_url;
-    request_obj->url_numero_segmentos = 1;
-    printf("%c\n", request_obj->url[0][0]);
+    strncpy(segmento, "/", 2);
+    adicionar_segmento_url(request_obj, segmento, as);
     return 0;
   }
 
@@ -34,8 +38,9 @@ static int analizar_url(char *url, int tamanho, Request *request_obj,
   int fim = 0;
   while (inicio < tamanho) {
     if (url[inicio] == '/') {
-
-      printf("%c\n", url[inicio]);
+      char *segmento = (char *)ArenaS_Alocar(as, 2);
+      strncpy(segmento, "/", 2);
+      adicionar_segmento_url(request_obj, segmento, as);
       inicio++;
       if (url[inicio] == '?') {
         return 0;
@@ -46,17 +51,24 @@ static int analizar_url(char *url, int tamanho, Request *request_obj,
     fim = inicio;
     while (true) {
       if (url[fim] == '/') {
-        p(url, inicio, fim - 1);
+        char *segmento = (char *)ArenaS_Alocar(as, fim - inicio + 1);
+        strncpy(segmento, &url[inicio], fim - inicio);
+        segmento[fim - inicio] = '\0';
+        adicionar_segmento_url(request_obj, segmento, as);
         inicio = fim;
         break;
       } else if (url[fim] == '?' || fim >= tamanho) {
-        p(url, inicio, fim - 1);
+        char *segmento = (char *)ArenaS_Alocar(as, fim - inicio + 1);
+        strncpy(segmento, &url[inicio], fim - inicio);
+        segmento[fim - inicio] = '\0';
+        adicionar_segmento_url(request_obj, segmento, as);
         return 0;
       }
 
       fim++;
     }
   }
+
   return 0;
 }
 
@@ -104,26 +116,28 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   int atual = 0;
 
   // method
-  while (buf_request_recebida[atual] != ' ') {
-    atual++;
-  }
-  char *method = ArenaS_Alocar(as, atual - inicio + 1);
-  strncpy(method, &buf_request_recebida[inicio], atual - inicio);
-  method[atual - inicio] = '\0';
-  printf("%s\n", method);
+  {
+    while (buf_request_recebida[atual] != ' ') {
+      atual++;
+    }
+    char *method = ArenaS_Alocar(as, atual - inicio + 1);
+    strncpy(method, &buf_request_recebida[inicio], atual - inicio);
+    method[atual - inicio] = '\0';
+    printf("%s\n", method);
 
-  switch (strcmp(method, "GET")) {
-  case 0:
-    (*request_obj)->method = method;
-    break;
-  default:
-    *request_obj = NULL;
-    *err_request = (ErroRequest *)ArenaS_Alocar(as, sizeof(ErroRequest));
-    strncpy((*err_request)->status, "501", 4);
-    char err_msg[] = "Método não suportado/conhecido.";
-    (*err_request)->descricao = (char *)ArenaS_Alocar(as, strlen(err_msg));
-    strncpy((*err_request)->descricao, err_msg, strlen(err_msg));
-    return -1;
+    switch (strcmp(method, "GET")) {
+    case 0:
+      (*request_obj)->method = method;
+      break;
+    default:
+      *request_obj = NULL;
+      *err_request = (ErroRequest *)ArenaS_Alocar(as, sizeof(ErroRequest));
+      strncpy((*err_request)->status, "501", 4);
+      char err_msg[] = "Método não suportado/conhecido.";
+      (*err_request)->descricao = (char *)ArenaS_Alocar(as, strlen(err_msg));
+      strncpy((*err_request)->descricao, err_msg, strlen(err_msg));
+      return -1;
+    }
   }
 
   atual++;
@@ -134,14 +148,15 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   }
   inicio = atual;
 
-  // url
+  /*
+   * url
+   * */
   while (buf_request_recebida[atual] != ' ') {
     atual++;
   }
   char *url = (char *)ArenaS_Alocar(as, atual - inicio + 1);
   strncpy(url, &buf_request_recebida[inicio], atual - inicio);
   url[atual - inicio] = '\0';
-  // printf("%s\n", url);
   analizar_url(url, atual - inicio, *request_obj, as);
   atual++;
   inicio = atual;
@@ -151,6 +166,9 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   }
   inicio = atual;
 
+  /*
+   * version
+   */
   while (buf_request_recebida[atual] != ' ' &&
          buf_request_recebida[atual] != '\r' &&
          buf_request_recebida[atual] != '\n') {
