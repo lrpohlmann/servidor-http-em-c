@@ -1,4 +1,5 @@
 #include <arpa/inet.h>
+#include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -203,6 +204,10 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     atual++;
     inicio = atual;
   }
+
+  assert((*request_obj)->method != NULL);
+  assert((*request_obj)->url != NULL);
+  assert((*request_obj)->http_version != NULL);
 
   return 0;
 }
