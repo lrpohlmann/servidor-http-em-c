@@ -7,8 +7,14 @@
 #include "../alloc/arena.h"
 #include "request.h"
 
-SegmentoUrl *adicionar_segmento_url(Request *request, char *url,
-                                    ArenaSimples *as) {
+static void init_request_obj(Request *request) {
+  request->url = NULL;
+  request->method = NULL;
+  request->http_version = NULL;
+}
+
+static SegmentoUrl *adicionar_segmento_url(Request *request, char *url,
+                                           ArenaSimples *as) {
   SegmentoUrl *novo_segmento =
       (SegmentoUrl *)ArenaS_Alocar(as, sizeof(SegmentoUrl));
   novo_segmento->segmento = url;
@@ -109,6 +115,7 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   printf("\n");
 
   *request_obj = (Request *)ArenaS_Alocar(as, sizeof(Request));
+  init_request_obj(*request_obj);
   *err_request = NULL;
 
   // request-line
@@ -191,8 +198,10 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     strncpy(http_version, &buf_request_recebida[inicio], atual - inicio);
     http_version[atual - inicio] = '\0';
     printf("%s\n", http_version);
+
     atual++;
     inicio = atual;
   }
+
   return 0;
 }
