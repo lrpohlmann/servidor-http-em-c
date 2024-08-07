@@ -115,7 +115,9 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   int inicio = 0;
   int atual = 0;
 
-  // method
+  /*
+   * method
+   */
   {
     while (buf_request_recebida[atual] != ' ') {
       atual++;
@@ -138,47 +140,59 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
       strncpy((*err_request)->descricao, err_msg, strlen(err_msg));
       return -1;
     }
-  }
 
-  atual++;
-  inicio = atual;
-
-  while (buf_request_recebida[atual] == ' ') {
     atual++;
+    inicio = atual;
   }
-  inicio = atual;
 
   /*
    * url
-   * */
-  while (buf_request_recebida[atual] != ' ') {
-    atual++;
-  }
-  char *url = (char *)ArenaS_Alocar(as, atual - inicio + 1);
-  strncpy(url, &buf_request_recebida[inicio], atual - inicio);
-  url[atual - inicio] = '\0';
-  analizar_url(url, atual - inicio, *request_obj, as);
-  atual++;
-  inicio = atual;
+   */
+  {
+    while (buf_request_recebida[atual] == ' ') {
+      atual++;
+    }
+    inicio = atual;
 
-  while (buf_request_recebida[atual] == ' ') {
+    while (buf_request_recebida[atual] != ' ') {
+      atual++;
+    }
+    char *url = (char *)ArenaS_Alocar(as, atual - inicio + 1);
+    strncpy(url, &buf_request_recebida[inicio], atual - inicio);
+    url[atual - inicio] = '\0';
+    analizar_url(url, atual - inicio, *request_obj, as);
+
+    SegmentoUrl *s = (*request_obj)->url;
+    while (s != NULL) {
+      printf("%s ", s->segmento);
+      s = s->proximo;
+    }
+    printf("\n");
+
     atual++;
+    inicio = atual;
   }
-  inicio = atual;
 
   /*
    * version
    */
-  while (buf_request_recebida[atual] != ' ' &&
-         buf_request_recebida[atual] != '\r' &&
-         buf_request_recebida[atual] != '\n') {
+  {
+    while (buf_request_recebida[atual] == ' ') {
+      atual++;
+    }
+    inicio = atual;
+
+    while (buf_request_recebida[atual] != ' ' &&
+           buf_request_recebida[atual] != '\r' &&
+           buf_request_recebida[atual] != '\n') {
+      atual++;
+    }
+    char *http_version = ArenaS_Alocar(as, atual - inicio + 1);
+    strncpy(http_version, &buf_request_recebida[inicio], atual - inicio);
+    http_version[atual - inicio] = '\0';
+    printf("%s\n", http_version);
     atual++;
+    inicio = atual;
   }
-  char *http_version = ArenaS_Alocar(as, atual - inicio + 1);
-  strncpy(http_version, &buf_request_recebida[inicio], atual - inicio);
-  http_version[atual - inicio] = '\0';
-  printf("%s\n", http_version);
-  atual++;
-  inicio = atual;
   return 0;
 }
