@@ -200,5 +200,39 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   assert((*request_obj)->url != NULL);
   assert((*request_obj)->http_version != NULL);
 
+  /*
+   * headers
+   */
+  while (buf_request_recebida[atual] == ' ' ||
+         buf_request_recebida[atual] == '\r' ||
+         buf_request_recebida[atual] == '\n') {
+    atual++;
+  }
+  inicio = atual;
+
+  while (buf_request_recebida[atual] != ':') {
+    atual++;
+  }
+  char *field_name = ArenaS_Alocar(as, atual - inicio + 1);
+  strncpy(field_name, &buf_request_recebida[inicio], atual - inicio);
+  field_name[atual - inicio] = '\0';
+  printf("%s\n", field_name);
+  atual++;
+  inicio = atual;
+
+  while (buf_request_recebida[atual] == ' ') {
+    atual++;
+  }
+  inicio = atual;
+
+  while (buf_request_recebida[atual] != '\r' &&
+         buf_request_recebida[atual] != '\n') {
+    atual++;
+  }
+  char *field_value = ArenaS_Alocar(as, atual - inicio + 1);
+  strncpy(field_value, &buf_request_recebida[inicio], atual - inicio);
+  field_value[atual - inicio] = '\0';
+  printf("%s\n", field_value);
+
   return 0;
 }
