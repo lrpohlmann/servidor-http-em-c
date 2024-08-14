@@ -9,8 +9,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "alloc/arena.h"
-#include "http/request.h"
+#include "src/alloc/arena.h"
+#include "src/http/request.h"
 
 void crash(const char *e) {
   perror(e);
