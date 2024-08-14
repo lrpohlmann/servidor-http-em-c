@@ -1,10 +1,12 @@
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "../src/alloc/arena.h"
 #include "../src/http/request.h"
 
 int main(void) {
+  printf("%s\n", __FILE__);
   char buf_recebido[] =
       "GET / HTTP/1.1\r\nHost: localhost:9500\r\nUser-Agent: Mozilla/5.0 (X11; "
       "Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0\r\nAccept: "
@@ -25,4 +27,5 @@ int main(void) {
   assert(strcmp(request_obj->method, "GET") == 0);
   assert(strcmp(request_obj->url->segmento, "/") == 0);
   assert(strcmp(request_obj->http_version, "HTTP/1.1") == 0);
+  printf("%s ... OK\n", __FILE__);
 }
