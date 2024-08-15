@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "../src/alloc/arena.h"
@@ -19,13 +20,16 @@ int main(void) {
       "u=0, i\r\n\r\n";
   Request *request_obj = NULL;
   ErroRequest *err_request = NULL;
-  ArenaSimples as = {.posicao = 0, .capacidade = 1024};
-  char b[1024];
+  ArenaSimples as = {.posicao = 0, .capacidade = 2048};
+  char *b = malloc(2048);
   as.buf = b;
   HTTP_AnaliseRequest(buf_recebido, strlen(buf_recebido), &request_obj,
                       &err_request, &as);
   assert(strcmp(request_obj->method, "GET") == 0);
   assert(strcmp(request_obj->url->segmento, "/") == 0);
   assert(strcmp(request_obj->http_version, "HTTP/1.1") == 0);
+
+  assert(strcmp(request_obj->general_header.connection, "keep-alive"));
+  free(b);
   printf("%s ... OK\n", __FILE__);
 }

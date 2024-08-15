@@ -80,6 +80,43 @@ static int analizar_url(char *url, int tamanho, Request *request_obj,
   return 0;
 }
 
+static void validate_and_set_headers(Request *request_obj, char *field_name,
+                                     char *field_value, ArenaSimples *as) {
+  unsigned long field_name_size = strlen(field_name);
+  char *lower_field_name = ArenaS_Alocar(as, field_name_size);
+
+  int i = 0;
+  while (field_name[i] != '\0') {
+    lower_field_name[i] = tolower(field_name[i]);
+    i++;
+  }
+  lower_field_name[field_name_size] = '\0';
+
+  if (strcmp(lower_field_name, "cache-control")) {
+    request_obj->general_header.cache_control = lower_field_name;
+  } else if (strcmp(lower_field_name, "connection")) {
+    request_obj->general_header.connection = lower_field_name;
+  } else if (strcmp(lower_field_name, "date")) {
+    request_obj->general_header.date = lower_field_name;
+  } else if (strcmp(lower_field_name, "pragma")) {
+    request_obj->general_header.pragma = lower_field_name;
+  } else if (strcmp(lower_field_name, "trailer")) {
+    request_obj->general_header.trailer = lower_field_name;
+  } else if (strcmp(lower_field_name, "transfer-encoding")) {
+    request_obj->general_header.transfer_encoding = lower_field_name;
+  } else if (strcmp(lower_field_name, "upgrade")) {
+    request_obj->general_header.upgrade = lower_field_name;
+  } else if (strcmp(lower_field_name, "via")) {
+    request_obj->general_header.via = lower_field_name;
+  } else if (strcmp(lower_field_name, "warning")) {
+    request_obj->general_header.warning = lower_field_name;
+  } else {
+    printf("Header desconhecido%s\n", lower_field_name);
+  }
+
+  return;
+}
+
 char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
   size_t tamanho_buf = 1024;
   char *buf_recv = (char *)malloc(tamanho_buf);
@@ -239,11 +276,16 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     printf("%s\n", field_value);
     inicio = atual;
 
-    if (strncmp(&buf_request_recebida[inicio], "\r\n\r\n", 4) == 0) {
-      printf("FIM\n");
-      inicio += 4;
+    validate_and_set_headers(*request_obj, field_name, field_value, as);
+
+    if (strncmp(&buf_request_recebida[inicio], "\r\n", 2) == 0) {
+      inicio += 2;
       atual = inicio;
-      break;
+      if (strncmp(&buf_request_recebida[inicio], "\r\n", 2) == 0) {
+        inicio += 2;
+        atual = inicio;
+        break;
+      }
     }
   }
 
