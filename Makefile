@@ -16,4 +16,4 @@ run-test: $(TEST_BIN)
 	$(foreach t,$(TEST_BIN), $(t) &)
 
 test/%.out: test/%.c
-	$(CC) $(SOURCE) $< -o $@
+	$(CC) $(CFLAGS) $(SOURCE) $< -o $@

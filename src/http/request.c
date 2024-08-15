@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -192,8 +193,14 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     http_version[atual - inicio] = '\0';
     (*request_obj)->http_version = http_version;
 
-    atual++;
     inicio = atual;
+    if (buf_request_recebida[atual] != '\r' ||
+        buf_request_recebida[atual + 1] == '\n') {
+      atual += 2;
+      inicio = atual;
+    } else {
+      assert(0);
+    }
   }
 
   assert((*request_obj)->method != NULL);
@@ -203,36 +210,42 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   /*
    * headers
    */
-  while (buf_request_recebida[atual] == ' ' ||
-         buf_request_recebida[atual] == '\r' ||
-         buf_request_recebida[atual] == '\n') {
-    atual++;
+  if (isalpha(buf_request_recebida[atual]) == 0) {
+    printf("ERRO");
   }
-  inicio = atual;
+  while (inicio < tamanho_request_recebida) {
+    while (buf_request_recebida[atual] != ':') {
+      atual++;
+    }
+    char *field_name = ArenaS_Alocar(as, atual - inicio + 1);
+    strncpy(field_name, &buf_request_recebida[inicio], atual - inicio);
+    field_name[atual - inicio] = '\0';
+    printf("%s\n", field_name);
+    atual++;
+    inicio = atual;
 
-  while (buf_request_recebida[atual] != ':') {
-    atual++;
-  }
-  char *field_name = ArenaS_Alocar(as, atual - inicio + 1);
-  strncpy(field_name, &buf_request_recebida[inicio], atual - inicio);
-  field_name[atual - inicio] = '\0';
-  printf("%s\n", field_name);
-  atual++;
-  inicio = atual;
+    while (buf_request_recebida[atual] == ' ') {
+      atual++;
+    }
+    inicio = atual;
 
-  while (buf_request_recebida[atual] == ' ') {
-    atual++;
-  }
-  inicio = atual;
+    while (buf_request_recebida[atual] != '\r' &&
+           buf_request_recebida[atual] != '\n') {
+      atual++;
+    }
+    char *field_value = ArenaS_Alocar(as, atual - inicio + 1);
+    strncpy(field_value, &buf_request_recebida[inicio], atual - inicio);
+    field_value[atual - inicio] = '\0';
+    printf("%s\n", field_value);
+    inicio = atual;
 
-  while (buf_request_recebida[atual] != '\r' &&
-         buf_request_recebida[atual] != '\n') {
-    atual++;
+    if (strncmp(&buf_request_recebida[inicio], "\r\n\r\n", 4) == 0) {
+      printf("FIM\n");
+      inicio += 4;
+      atual = inicio;
+      break;
+    }
   }
-  char *field_value = ArenaS_Alocar(as, atual - inicio + 1);
-  strncpy(field_value, &buf_request_recebida[inicio], atual - inicio);
-  field_value[atual - inicio] = '\0';
-  printf("%s\n", field_value);
 
   return 0;
 }

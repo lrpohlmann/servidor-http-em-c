@@ -16,7 +16,7 @@ int main(void) {
       "zstd\r\nConnection: keep-alive\r\nUpgrade-Insecure-Requests: "
       "1\r\nSec-Fetch-Dest: document\r\nSec-Fetch-Mode: "
       "navigate\r\nSec-Fetch-Site: none\r\nSec-Fetch-User: ?1\r\nPriority: "
-      "u=0, i\r\n";
+      "u=0, i\r\n\r\n";
   Request *request_obj = NULL;
   ErroRequest *err_request = NULL;
   ArenaSimples as = {.posicao = 0, .capacidade = 1024};
