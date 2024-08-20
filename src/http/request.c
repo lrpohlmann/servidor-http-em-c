@@ -92,6 +92,9 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
   }
   lower_field_name[field_name_size] = '\0';
 
+  /*
+   * general header
+   */
   if (strcmp(lower_field_name, "cache-control") == 0) {
     request_obj->general_header.cache_control = lower_field_name;
   } else if (strcmp(lower_field_name, "connection") == 0) {
@@ -110,7 +113,11 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
     request_obj->general_header.via = lower_field_name;
   } else if (strcmp(lower_field_name, "warning") == 0) {
     request_obj->general_header.warning = lower_field_name;
-  } else if (strcmp(lower_field_name, "accept") == 0) {
+  }
+  /*
+   * request header
+   */
+  else if (strcmp(lower_field_name, "accept") == 0) {
     request_obj->request_header.accept = lower_field_name;
   } else if (strcmp(lower_field_name, "accept-charset") == 0) {
     request_obj->request_header.accept_charset = lower_field_name;
