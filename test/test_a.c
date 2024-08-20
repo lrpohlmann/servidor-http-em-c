@@ -30,6 +30,16 @@ int main(void) {
   assert(strcmp(request_obj->http_version, "HTTP/1.1") == 0);
 
   assert(strcmp(request_obj->general_header.connection, "keep-alive"));
+  assert(strcmp(request_obj->request_header.host, "localhost:9500"));
+  assert(strcmp(request_obj->request_header.user_agent,
+                "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 "
+                "Firefox/128.0"));
+  assert(strcmp(request_obj->request_header.accept,
+                "text/html,application/xhtml+xml,application/xml;q=0.9,image/"
+                "avif,image/webp,image/png,image/svg+xml,*/*;q=0.8"));
+  assert(strcmp(request_obj->request_header.accept_language, "en-US,en;q=0.5"));
+  assert(strcmp(request_obj->request_header.accept_encoding,
+                "gzip, deflate, br, zstd"));
   free(b);
   printf("%s ... OK\n", __FILE__);
 }

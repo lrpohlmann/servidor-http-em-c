@@ -92,29 +92,63 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
   }
   lower_field_name[field_name_size] = '\0';
 
-  if (strcmp(lower_field_name, "cache-control")) {
+  if (strcmp(lower_field_name, "cache-control") == 0) {
     request_obj->general_header.cache_control = lower_field_name;
-  } else if (strcmp(lower_field_name, "connection")) {
+  } else if (strcmp(lower_field_name, "connection") == 0) {
     request_obj->general_header.connection = lower_field_name;
-  } else if (strcmp(lower_field_name, "date")) {
+  } else if (strcmp(lower_field_name, "date") == 0) {
     request_obj->general_header.date = lower_field_name;
-  } else if (strcmp(lower_field_name, "pragma")) {
+  } else if (strcmp(lower_field_name, "pragma") == 0) {
     request_obj->general_header.pragma = lower_field_name;
-  } else if (strcmp(lower_field_name, "trailer")) {
+  } else if (strcmp(lower_field_name, "trailer") == 0) {
     request_obj->general_header.trailer = lower_field_name;
-  } else if (strcmp(lower_field_name, "transfer-encoding")) {
+  } else if (strcmp(lower_field_name, "transfer-encoding") == 0) {
     request_obj->general_header.transfer_encoding = lower_field_name;
-  } else if (strcmp(lower_field_name, "upgrade")) {
+  } else if (strcmp(lower_field_name, "upgrade") == 0) {
     request_obj->general_header.upgrade = lower_field_name;
-  } else if (strcmp(lower_field_name, "via")) {
+  } else if (strcmp(lower_field_name, "via") == 0) {
     request_obj->general_header.via = lower_field_name;
-  } else if (strcmp(lower_field_name, "warning")) {
+  } else if (strcmp(lower_field_name, "warning") == 0) {
     request_obj->general_header.warning = lower_field_name;
-  } else {
-    printf("Header desconhecido%s\n", lower_field_name);
+  } else if (strcmp(lower_field_name, "accept") == 0) {
+    request_obj->request_header.accept = lower_field_name;
+  } else if (strcmp(lower_field_name, "accept-charset") == 0) {
+    request_obj->request_header.accept_charset = lower_field_name;
+  } else if (strcmp(lower_field_name, "accept-encoding") == 0) {
+    request_obj->request_header.accept_encoding = lower_field_name;
+  } else if (strcmp(lower_field_name, "accept-language") == 0) {
+    request_obj->request_header.accept_language = lower_field_name;
+  } else if (strcmp(lower_field_name, "authorization") == 0) {
+    request_obj->request_header.authorization = lower_field_name;
+  } else if (strcmp(lower_field_name, "expect") == 0) {
+    request_obj->request_header.expect = lower_field_name;
+  } else if (strcmp(lower_field_name, "from") == 0) {
+    request_obj->request_header.from = lower_field_name;
+  } else if (strcmp(lower_field_name, "host") == 0) {
+    request_obj->request_header.host = lower_field_name;
+  } else if (strcmp(lower_field_name, "if-match") == 0) {
+    request_obj->request_header.if_match = lower_field_name;
+  } else if (strcmp(lower_field_name, "if-modified-since") == 0) {
+    request_obj->request_header.if_modified_since = lower_field_name;
+  } else if (strcmp(lower_field_name, "if-none-match") == 0) {
+    request_obj->request_header.if_none_match = lower_field_name;
+  } else if (strcmp(lower_field_name, "if-range") == 0) {
+    request_obj->request_header.if_range = lower_field_name;
+  } else if (strcmp(lower_field_name, "if-unmodified-since") == 0) {
+    request_obj->request_header.if_unmodified_since = lower_field_name;
+  } else if (strcmp(lower_field_name, "max-forwards") == 0) {
+    request_obj->request_header.max_forwards = lower_field_name;
+  } else if (strcmp(lower_field_name, "proxy-authorization") == 0) {
+    request_obj->request_header.proxy_authorization = lower_field_name;
+  } else if (strcmp(lower_field_name, "range") == 0) {
+    request_obj->request_header.range = lower_field_name;
+  } else if (strcmp(lower_field_name, "referer") == 0) {
+    request_obj->request_header.referer = lower_field_name;
+  } else if (strcmp(lower_field_name, "te") == 0) {
+    request_obj->request_header.te = lower_field_name;
+  } else if (strcmp(lower_field_name, "user-agent") == 0) {
+    request_obj->request_header.user_agent = lower_field_name;
   }
-
-  return;
 }
 
 char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
