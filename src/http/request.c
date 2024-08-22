@@ -189,10 +189,10 @@ char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
 int HTTP_AnaliseRequest(char *buf_request_recebida,
                         size_t tamanho_request_recebida, Request **request_obj,
                         ErroRequest **err_request, ArenaSimples *as) {
-  for (int i = 0; i < tamanho_request_recebida; i++) {
+  /* for (int i = 0; i < tamanho_request_recebida; i++) {
     printf("%c", buf_request_recebida[i]);
   }
-  printf("\n");
+  printf("\n"); */
 
   *request_obj = (Request *)ArenaS_Alocar(as, sizeof(Request));
   init_request_obj(*request_obj);
@@ -298,7 +298,6 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     char *field_name = ArenaS_Alocar(as, atual - inicio + 1);
     strncpy(field_name, &buf_request_recebida[inicio], atual - inicio);
     field_name[atual - inicio] = '\0';
-    printf("%s\n", field_name);
     atual++;
     inicio = atual;
 
@@ -314,7 +313,6 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
     char *field_value = ArenaS_Alocar(as, atual - inicio + 1);
     strncpy(field_value, &buf_request_recebida[inicio], atual - inicio);
     field_value[atual - inicio] = '\0';
-    printf("%s\n", field_value);
     inicio = atual;
 
     validate_and_set_headers(*request_obj, field_name, field_value, as);

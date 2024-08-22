@@ -6,8 +6,7 @@
 #include "../src/alloc/arena.h"
 #include "../src/http/request.h"
 
-int main(void) {
-  printf("%s\n", __FILE__);
+int main(int argc, char *argv[]) {
   char buf_recebido[] =
       "GET / HTTP/1.1\r\nHost: localhost:9500\r\nUser-Agent: Mozilla/5.0 (X11; "
       "Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0\r\nAccept: "
@@ -41,5 +40,6 @@ int main(void) {
   assert(strcmp(request_obj->request_header.accept_encoding,
                 "gzip, deflate, br, zstd"));
   free(b);
-  printf("%s ... OK\n", __FILE__);
+
+  printf("%s ... \e[1;32mOK\e[0m\n", __FILE__);
 }
