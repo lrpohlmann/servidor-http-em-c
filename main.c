@@ -71,6 +71,7 @@ int main() {
     size_t bytes_recebidos = 0;
     char *buf_recv = HTTP_ReceberRequest(accept_fd, &bytes_recebidos);
     if (buf_recv == NULL) {
+      // browser doesn't show this. Says that the connection was reset
       char resposta[] = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: "
                         "text/html\r\n\r\n<html><body><h1>HTTP 413 - Payload "
                         "Too Large</h1></body></html>";
@@ -78,6 +79,9 @@ int main() {
       if (bytes_enviados == -1) {
         crash("send");
       }
+      close(accept_fd);
+      arena.posicao = 0;
+      continue;
     }
 
     ErroRequest *err_request;
