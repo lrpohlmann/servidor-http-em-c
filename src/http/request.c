@@ -159,7 +159,7 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
 }
 
 char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
-  size_t tamanho_buf = 1024;
+  size_t tamanho_buf = REQUEST_BUFFER_BASE_SIZE;
   char *buf_recv = (char *)malloc(tamanho_buf);
   *total_bytes_recebidos = 0;
   while (1) {

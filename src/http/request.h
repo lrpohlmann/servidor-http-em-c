@@ -3,6 +3,9 @@
 
 #include "../alloc/arena.h"
 
+#define REQUEST_BUFFER_BASE_SIZE 1024
+#define MAX_REQUEST_SIZE 8 * 1024
+
 typedef struct nodo_segmento_url {
   char *segmento;
   struct nodo_segmento_url *proximo;
