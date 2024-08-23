@@ -158,41 +158,49 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
   }
 }
 
-char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos) {
-  size_t tamanho_buf = REQUEST_BUFFER_BASE_SIZE;
-  char *buf_recv = (char *)malloc(tamanho_buf);
-  *total_bytes_recebidos = 0;
+char *HTTP_ReceberRequest(int accept_fd, size_t *total_recv_bytes_received) {
+  size_t buffer_size = REQUEST_BUFFER_BASE_SIZE;
+  char *buffer = (char *)malloc(buffer_size);
+
+  *total_recv_bytes_received = 0;
   while (1) {
-    ssize_t bytes_recebidos =
-        recv(accept_fd, (void *)&buf_recv[*total_bytes_recebidos], 1024, 0);
-    if (bytes_recebidos == -1) {
+
+    ssize_t received_bytes =
+        recv(accept_fd, (void *)&buffer[*total_recv_bytes_received],
+             REQUEST_BUFFER_BASE_SIZE, 0);
+    if (received_bytes == -1) {
       perror("recv");
       exit(EXIT_FAILURE);
-    } else if (bytes_recebidos == 0) {
-      break;
-    } else if (bytes_recebidos < tamanho_buf) {
-      *total_bytes_recebidos += bytes_recebidos;
-      break;
-    } else {
-      *total_bytes_recebidos += bytes_recebidos;
-      if (*total_bytes_recebidos >= tamanho_buf) {
-        tamanho_buf += tamanho_buf;
-        char *novo_buf = (char *)realloc(buf_recv, tamanho_buf);
-        buf_recv = novo_buf;
-      }
     }
+
+    // receiving less than the expected means no more data expected
+    // (currently... ?)
+    if (received_bytes < REQUEST_BUFFER_BASE_SIZE) {
+      return buffer;
+    }
+
+    *total_recv_bytes_received += received_bytes;
+    if (received_bytes == REQUEST_BUFFER_BASE_SIZE) {
+      buffer_size += REQUEST_BUFFER_BASE_SIZE;
+      if (buffer_size > MAX_REQUEST_SIZE) {
+        free(buffer);
+        return NULL;
+      }
+
+      char *resized_buf = realloc(buffer, buffer_size);
+      buffer = resized_buf;
+      continue;
+    }
+
+    assert(received_bytes <= REQUEST_BUFFER_BASE_SIZE);
   }
 
-  return buf_recv;
+  return buffer;
 }
 
 int HTTP_AnaliseRequest(char *buf_request_recebida,
                         size_t tamanho_request_recebida, Request **request_obj,
                         ErroRequest **err_request, ArenaSimples *as) {
-  /* for (int i = 0; i < tamanho_request_recebida; i++) {
-    printf("%c", buf_request_recebida[i]);
-  }
-  printf("\n"); */
 
   *request_obj = (Request *)ArenaS_Alocar(as, sizeof(Request));
   init_request_obj(*request_obj);
