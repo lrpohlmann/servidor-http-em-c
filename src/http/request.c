@@ -15,65 +15,64 @@ static void init_request_obj(Request *request) {
   request->http_version = NULL;
 }
 
-static SegmentoUrl *adicionar_segmento_url(Request *request, char *url,
-                                           ArenaSimples *as) {
-  SegmentoUrl *novo_segmento =
-      (SegmentoUrl *)ArenaS_Alocar(as, sizeof(SegmentoUrl));
-  novo_segmento->segmento = url;
+static UrlSegment *add_url_segment(Request *request, char *url,
+                                   ArenaSimples *as) {
+  UrlSegment *new_segment = (UrlSegment *)ArenaS_Alocar(as, sizeof(UrlSegment));
+  new_segment->segment = url;
   if (request->url == NULL) {
-    request->url = novo_segmento;
-    return novo_segmento;
+    request->url = new_segment;
+    return new_segment;
   }
 
-  SegmentoUrl *atual = request->url;
-  while (atual->proximo != NULL) {
-    atual = atual->proximo;
+  UrlSegment *actual = request->url;
+  while (actual->next != NULL) {
+    actual = actual->next;
   }
-  atual->proximo = novo_segmento;
-  return novo_segmento;
+  actual->next = new_segment;
+  return new_segment;
 }
 
-static int analizar_url(char *url, int tamanho, Request *request_obj,
-                        ArenaSimples *as) {
-  if (tamanho == 1) {
-    char *segmento = (char *)ArenaS_Alocar(as, 2);
-    strncpy(segmento, "/", 2);
-    adicionar_segmento_url(request_obj, segmento, as);
+static int parse_url(char *url, int size, Request *request_obj,
+                     ArenaSimples *as) {
+  if (size == 1) {
+    char *segment = (char *)ArenaS_Alocar(as, 2);
+    strncpy(segment, "/", 2);
+    add_url_segment(request_obj, segment, as);
     return 0;
   }
 
-  int inicio = 0;
-  int fim = 0;
-  while (inicio < tamanho) {
-    if (url[inicio] == '/') {
-      char *segmento = (char *)ArenaS_Alocar(as, 2);
-      strncpy(segmento, "/", 2);
-      adicionar_segmento_url(request_obj, segmento, as);
-      inicio++;
-      if (url[inicio] == '?') {
+  int start = 0;
+  int end = 0;
+  while (start < size) {
+    if (url[start] == '/') {
+      char *segment = (char *)ArenaS_Alocar(as, 2);
+      strncpy(segment, "/", 2);
+      add_url_segment(request_obj, segment, as);
+      start++;
+      if (url[start] == '?') {
         return 0;
       }
       continue;
     }
 
-    fim = inicio;
+    end = start;
     while (true) {
-      if (url[fim] == '/') {
-        char *segmento = (char *)ArenaS_Alocar(as, fim - inicio + 1);
-        strncpy(segmento, &url[inicio], fim - inicio);
-        segmento[fim - inicio] = '\0';
-        adicionar_segmento_url(request_obj, segmento, as);
-        inicio = fim;
+      if (url[end] == '/') {
+        char *segment = (char *)ArenaS_Alocar(as, end - start + 1);
+        strncpy(segment, &url[start], end - start);
+        segment[end - start] = '\0';
+        add_url_segment(request_obj, segment, as);
+        start = end;
         break;
-      } else if (url[fim] == '?' || fim >= tamanho) {
-        char *segmento = (char *)ArenaS_Alocar(as, fim - inicio + 1);
-        strncpy(segmento, &url[inicio], fim - inicio);
-        segmento[fim - inicio] = '\0';
-        adicionar_segmento_url(request_obj, segmento, as);
+      } else if (url[end] == '?' || end >= size) {
+        char *segment = (char *)ArenaS_Alocar(as, end - start + 1);
+        strncpy(segment, &url[start], end - start);
+        segment[end - start] = '\0';
+        add_url_segment(request_obj, segment, as);
         return 0;
       }
 
-      fim++;
+      end++;
     }
   }
 
@@ -158,15 +157,15 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
   }
 }
 
-char *HTTP_ReceberRequest(int accept_fd, size_t *total_recv_bytes_received) {
+char *HTTP_ReceiveRequest(int accept_fd, size_t *total_recv_received_bytes) {
   size_t buffer_size = REQUEST_BUFFER_BASE_SIZE;
   char *buffer = (char *)malloc(buffer_size);
 
-  *total_recv_bytes_received = 0;
+  *total_recv_received_bytes = 0;
   while (1) {
 
     ssize_t received_bytes =
-        recv(accept_fd, (void *)&buffer[*total_recv_bytes_received],
+        recv(accept_fd, (void *)&buffer[*total_recv_received_bytes],
              REQUEST_BUFFER_BASE_SIZE, 0);
     if (received_bytes == -1) {
       perror("recv");
@@ -179,7 +178,7 @@ char *HTTP_ReceberRequest(int accept_fd, size_t *total_recv_bytes_received) {
       return buffer;
     }
 
-    *total_recv_bytes_received += received_bytes;
+    *total_recv_received_bytes += received_bytes;
     if (received_bytes == REQUEST_BUFFER_BASE_SIZE) {
       buffer_size += REQUEST_BUFFER_BASE_SIZE;
       if (buffer_size > MAX_REQUEST_SIZE) {
@@ -198,28 +197,28 @@ char *HTTP_ReceberRequest(int accept_fd, size_t *total_recv_bytes_received) {
   return buffer;
 }
 
-int HTTP_AnaliseRequest(char *buf_request_recebida,
-                        size_t tamanho_request_recebida, Request **request_obj,
-                        ErroRequest **err_request, ArenaSimples *as) {
+int HTTP_ParseRequest(char *buffer_received_request,
+                      size_t size_received_request, Request **request_obj,
+                      ErrorRequest **err_request, ArenaSimples *as) {
 
   *request_obj = (Request *)ArenaS_Alocar(as, sizeof(Request));
   init_request_obj(*request_obj);
   *err_request = NULL;
 
   // request-line
-  int inicio = 0;
-  int atual = 0;
+  int start = 0;
+  int current = 0;
 
   /*
    * method
    */
   {
-    while (buf_request_recebida[atual] != ' ') {
-      atual++;
+    while (buffer_received_request[current] != ' ') {
+      current++;
     }
-    char *method = ArenaS_Alocar(as, atual - inicio + 1);
-    strncpy(method, &buf_request_recebida[inicio], atual - inicio);
-    method[atual - inicio] = '\0';
+    char *method = ArenaS_Alocar(as, current - start + 1);
+    strncpy(method, &buffer_received_request[start], current - start);
+    method[current - start] = '\0';
 
     switch (strcmp(method, "GET")) {
     case 0:
@@ -227,7 +226,7 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
       break;
     default:
       *request_obj = NULL;
-      *err_request = (ErroRequest *)ArenaS_Alocar(as, sizeof(ErroRequest));
+      *err_request = (ErrorRequest *)ArenaS_Alocar(as, sizeof(ErrorRequest));
       strncpy((*err_request)->status, "501", 4);
       char err_msg[] = "Método não suportado/conhecido.";
       (*err_request)->descricao = (char *)ArenaS_Alocar(as, strlen(err_msg));
@@ -235,55 +234,55 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
       return -1;
     }
 
-    atual++;
-    inicio = atual;
+    current++;
+    start = current;
   }
 
   /*
    * url
    */
   {
-    while (buf_request_recebida[atual] == ' ') {
-      atual++;
+    while (buffer_received_request[current] == ' ') {
+      current++;
     }
-    inicio = atual;
+    start = current;
 
-    while (buf_request_recebida[atual] != ' ') {
-      atual++;
+    while (buffer_received_request[current] != ' ') {
+      current++;
     }
-    char *url = (char *)ArenaS_Alocar(as, atual - inicio + 1);
-    strncpy(url, &buf_request_recebida[inicio], atual - inicio);
-    url[atual - inicio] = '\0';
-    analizar_url(url, atual - inicio, *request_obj, as);
+    char *url = (char *)ArenaS_Alocar(as, current - start + 1);
+    strncpy(url, &buffer_received_request[start], current - start);
+    url[current - start] = '\0';
+    parse_url(url, current - start, *request_obj, as);
 
-    atual++;
-    inicio = atual;
+    current++;
+    start = current;
   }
 
   /*
    * version
    */
   {
-    while (buf_request_recebida[atual] == ' ') {
-      atual++;
+    while (buffer_received_request[current] == ' ') {
+      current++;
     }
-    inicio = atual;
+    start = current;
 
-    while (buf_request_recebida[atual] != ' ' &&
-           buf_request_recebida[atual] != '\r' &&
-           buf_request_recebida[atual] != '\n') {
-      atual++;
+    while (buffer_received_request[current] != ' ' &&
+           buffer_received_request[current] != '\r' &&
+           buffer_received_request[current] != '\n') {
+      current++;
     }
-    char *http_version = ArenaS_Alocar(as, atual - inicio + 1);
-    strncpy(http_version, &buf_request_recebida[inicio], atual - inicio);
-    http_version[atual - inicio] = '\0';
+    char *http_version = ArenaS_Alocar(as, current - start + 1);
+    strncpy(http_version, &buffer_received_request[start], current - start);
+    http_version[current - start] = '\0';
     (*request_obj)->http_version = http_version;
 
-    inicio = atual;
-    if (buf_request_recebida[atual] != '\r' ||
-        buf_request_recebida[atual + 1] == '\n') {
-      atual += 2;
-      inicio = atual;
+    start = current;
+    if (buffer_received_request[current] != '\r' ||
+        buffer_received_request[current + 1] == '\n') {
+      current += 2;
+      start = current;
     } else {
       assert(0);
     }
@@ -296,41 +295,41 @@ int HTTP_AnaliseRequest(char *buf_request_recebida,
   /*
    * headers
    */
-  if (isalpha(buf_request_recebida[atual]) == 0) {
+  if (isalpha(buffer_received_request[current]) == 0) {
     printf("ERRO");
   }
-  while (inicio < tamanho_request_recebida) {
-    while (buf_request_recebida[atual] != ':') {
-      atual++;
+  while (start < size_received_request) {
+    while (buffer_received_request[current] != ':') {
+      current++;
     }
-    char *field_name = ArenaS_Alocar(as, atual - inicio + 1);
-    strncpy(field_name, &buf_request_recebida[inicio], atual - inicio);
-    field_name[atual - inicio] = '\0';
-    atual++;
-    inicio = atual;
+    char *field_name = ArenaS_Alocar(as, current - start + 1);
+    strncpy(field_name, &buffer_received_request[start], current - start);
+    field_name[current - start] = '\0';
+    current++;
+    start = current;
 
-    while (buf_request_recebida[atual] == ' ') {
-      atual++;
+    while (buffer_received_request[current] == ' ') {
+      current++;
     }
-    inicio = atual;
+    start = current;
 
-    while (buf_request_recebida[atual] != '\r' &&
-           buf_request_recebida[atual] != '\n') {
-      atual++;
+    while (buffer_received_request[current] != '\r' &&
+           buffer_received_request[current] != '\n') {
+      current++;
     }
-    char *field_value = ArenaS_Alocar(as, atual - inicio + 1);
-    strncpy(field_value, &buf_request_recebida[inicio], atual - inicio);
-    field_value[atual - inicio] = '\0';
-    inicio = atual;
+    char *field_value = ArenaS_Alocar(as, current - start + 1);
+    strncpy(field_value, &buffer_received_request[start], current - start);
+    field_value[current - start] = '\0';
+    start = current;
 
     validate_and_set_headers(*request_obj, field_name, field_value, as);
 
-    if (strncmp(&buf_request_recebida[inicio], "\r\n", 2) == 0) {
-      inicio += 2;
-      atual = inicio;
-      if (strncmp(&buf_request_recebida[inicio], "\r\n", 2) == 0) {
-        inicio += 2;
-        atual = inicio;
+    if (strncmp(&buffer_received_request[start], "\r\n", 2) == 0) {
+      start += 2;
+      current = start;
+      if (strncmp(&buffer_received_request[start], "\r\n", 2) == 0) {
+        start += 2;
+        current = start;
         break;
       }
     }

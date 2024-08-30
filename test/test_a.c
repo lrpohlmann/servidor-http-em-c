@@ -18,14 +18,14 @@ int main(int argc, char *argv[]) {
       "navigate\r\nSec-Fetch-Site: none\r\nSec-Fetch-User: ?1\r\nPriority: "
       "u=0, i\r\n\r\n";
   Request *request_obj = NULL;
-  ErroRequest *err_request = NULL;
+  ErrorRequest *err_request = NULL;
   ArenaSimples as = {.posicao = 0, .capacidade = 2048};
   char *b = malloc(2048);
   as.buf = b;
-  HTTP_AnaliseRequest(buf_recebido, strlen(buf_recebido), &request_obj,
-                      &err_request, &as);
+  HTTP_ParseRequest(buf_recebido, strlen(buf_recebido), &request_obj,
+                    &err_request, &as);
   assert(strcmp(request_obj->method, "GET") == 0);
-  assert(strcmp(request_obj->url->segmento, "/") == 0);
+  assert(strcmp(request_obj->url->segment, "/") == 0);
   assert(strcmp(request_obj->http_version, "HTTP/1.1") == 0);
 
   assert(strcmp(request_obj->general_header.connection, "keep-alive"));

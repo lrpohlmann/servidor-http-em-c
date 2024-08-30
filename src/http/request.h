@@ -6,10 +6,10 @@
 #define REQUEST_BUFFER_BASE_SIZE 1024
 #define MAX_REQUEST_SIZE 8 * 1024
 
-typedef struct nodo_segmento_url {
-  char *segmento;
-  struct nodo_segmento_url *proximo;
-} SegmentoUrl;
+typedef struct url_segment_node {
+  char *segment;
+  struct url_segment_node *next;
+} UrlSegment;
 
 typedef struct {
   char *cache_control;
@@ -47,7 +47,7 @@ typedef struct {
 
 typedef struct {
   char *method;
-  SegmentoUrl *url;
+  UrlSegment *url;
   char *http_version;
   GeneralHeader general_header;
   RequestHeader request_header;
@@ -56,10 +56,10 @@ typedef struct {
 typedef struct {
   char status[4];
   char *descricao;
-} ErroRequest;
+} ErrorRequest;
 
-char *HTTP_ReceberRequest(int accept_fd, size_t *total_bytes_recebidos);
+char *HTTP_ReceiveRequest(int accept_fd, size_t *total_bytes_recebidos);
 
-int HTTP_AnaliseRequest(char *buf_request_recebida,
-                        size_t tamanho_request_recebida, Request **request_obj,
-                        ErroRequest **err_request, ArenaSimples *as);
+int HTTP_ParseRequest(char *buf_request_recebida,
+                      size_t tamanho_request_recebida, Request **request_obj,
+                      ErrorRequest **err_request, ArenaSimples *as);

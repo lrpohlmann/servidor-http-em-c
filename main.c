@@ -69,7 +69,7 @@ int main() {
     }
 
     size_t bytes_recebidos = 0;
-    char *buf_recv = HTTP_ReceberRequest(accept_fd, &bytes_recebidos);
+    char *buf_recv = HTTP_ReceiveRequest(accept_fd, &bytes_recebidos);
     if (buf_recv == NULL) {
       // browser doesn't show this. Says that the connection was reset
       char resposta[] = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: "
@@ -84,9 +84,9 @@ int main() {
       continue;
     }
 
-    ErroRequest *err_request;
+    ErrorRequest *err_request;
     Request *request_obj;
-    int status_analise_request = HTTP_AnaliseRequest(
+    int status_analise_request = HTTP_ParseRequest(
         buf_recv, bytes_recebidos, &request_obj, &err_request, &arena);
     if (status_analise_request != 0) {
       printf("ERRO\n");
