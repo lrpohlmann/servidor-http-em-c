@@ -9,6 +9,10 @@
 #include "../alloc/arena.h"
 #include "request.h"
 
+/*
+ * internals
+ */
+
 static void init_request_obj(Request *request) {
   request->url = NULL;
   request->method = NULL;
@@ -91,9 +95,7 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
   }
   lower_field_name[field_name_size] = '\0';
 
-  /*
-   * general header
-   */
+  /* general header */
   if (strcmp(lower_field_name, "cache-control") == 0) {
     request_obj->general_header.cache_control = lower_field_name;
   } else if (strcmp(lower_field_name, "connection") == 0) {
@@ -113,9 +115,8 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
   } else if (strcmp(lower_field_name, "warning") == 0) {
     request_obj->general_header.warning = lower_field_name;
   }
-  /*
-   * request header
-   */
+
+  /* request header */
   else if (strcmp(lower_field_name, "accept") == 0) {
     request_obj->request_header.accept = lower_field_name;
   } else if (strcmp(lower_field_name, "accept-charset") == 0) {
@@ -156,6 +157,26 @@ static void validate_and_set_headers(Request *request_obj, char *field_name,
     request_obj->request_header.user_agent = lower_field_name;
   }
 }
+
+static void set_request_error(Request **request_obj, ErrorRequest **err_request,
+                              char *http_status_code, char *error_message,
+                              ArenaSimples *as) {
+  *request_obj = NULL;
+  *err_request = (ErrorRequest *)ArenaS_Alocar(as, sizeof(ErrorRequest));
+  assert(strlen(http_status_code) == 3);
+
+  unsigned long len_error_message = strlen(error_message);
+  char *copy_error_message = ArenaS_Alocar(as, len_error_message);
+
+  strncpy((*err_request)->status, http_status_code, 4);
+  strncpy(copy_error_message, error_message, len_error_message);
+
+  (*err_request)->descricao = copy_error_message;
+}
+
+/*
+ * public interface
+ */
 
 char *HTTP_ReceiveRequest(int accept_fd, size_t *total_recv_received_bytes) {
   size_t buffer_size = REQUEST_BUFFER_BASE_SIZE;
@@ -215,6 +236,11 @@ int HTTP_ParseRequest(char *buffer_received_request,
   {
     while (buffer_received_request[current] != ' ') {
       current++;
+      if (current >= size_received_request) {
+        set_request_error(request_obj, err_request, "400",
+                          "Requisição malformada.", as);
+        return -1;
+      }
     }
     char *method = ArenaS_Alocar(as, current - start + 1);
     strncpy(method, &buffer_received_request[start], current - start);
