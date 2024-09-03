@@ -22,8 +22,12 @@ int main(void) {
     }
   }
 
+  printf("%lu Testes Encontrados\n", test_files.gl_pathc);
+  int ok_tests = 0;
+  int fail_tests = 0;
+
   for (int i = 0; i < test_files.gl_pathc; i++) {
-    printf("Teste %s\n", test_files.gl_pathv[i]);
+    printf("%s ... \n", test_files.gl_pathv[i]);
     pid_t new_process_id = fork();
     if (new_process_id == -1) {
       printf("Erro: fork.\n");
@@ -36,17 +40,27 @@ int main(void) {
         return EXIT_FAILURE;
       }
       return EXIT_SUCCESS;
+    } else {
+      int test_exit_status = 0;
+      int wait_return = waitpid(new_process_id, &test_exit_status, 0);
+      if (wait_return == -1) {
+        perror("wait");
+        return EXIT_FAILURE;
+      }
+
+      if (WIFEXITED(test_exit_status)) {
+        printf("\e[1;32mOK\e[0m\n");
+        ok_tests++;
+      } else {
+        printf("\e[1;31mFAIL\e[0m\n");
+        fail_tests++;
+      }
+
+      printf("\n");
     }
   }
 
-  for (int i = 0; i < test_files.gl_pathc; i++) {
-    pid_t finalized_test = wait(NULL);
-    if (finalized_test == -1) {
-      perror("wait");
-      return EXIT_FAILURE;
-    }
-  }
-
+  printf("Ok: %d, Failed: %d\n", ok_tests, fail_tests);
   globfree(&test_files);
   return EXIT_SUCCESS;
 }

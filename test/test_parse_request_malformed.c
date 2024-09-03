@@ -21,6 +21,4 @@ int main(int argc, char *argv[]) {
   assert(strcmp(err_request->status, "400") == 0);
 
   free(b);
-
-  printf("%s ... \e[1;32mOK\e[0m\n", __FILE__);
 }

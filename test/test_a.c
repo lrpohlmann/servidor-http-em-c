@@ -40,6 +40,4 @@ int main(int argc, char *argv[]) {
   assert(strcmp(request_obj->request_header.accept_encoding,
                 "gzip, deflate, br, zstd"));
   free(b);
-
-  printf("%s ... \e[1;32mOK\e[0m\n", __FILE__);
 }

@@ -9,7 +9,7 @@ servidor: $(OBJ)
 	$(CC) $(CFLAGS) $(SOURCE) main.c -o main.out
 
 test: $(TEST_BIN)
-	$(foreach file,$(TEST_SOURCE),echo Processing $(file);)
+	@./test/main.out
 
 test/%.out: test/%.c
-	$(CC) $(TEST_CFLAGS) $(SOURCE) $< -o $@
+	@$(CC) $(TEST_CFLAGS) $(SOURCE) $< -o $@
