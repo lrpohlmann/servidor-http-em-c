@@ -342,57 +342,63 @@ int HTTP_ParseRequest(char *buffer_received_request,
   /*
    * headers
    */
-  if (isalpha(buffer_received_request[current]) == 0) {
-    printf("ERRO\n - %c", buffer_received_request[current]);
+  if (current + 1 >= size_received_request) {
+    set_request_error(request_obj, err_request, "400", "Requisição malformada.",
+                      as);
+    return -1;
   }
-  while (start < size_received_request) {
-    while (buffer_received_request[current] != ':') {
-      current++;
-      if (current >= size_received_request) {
-        set_request_error(request_obj, err_request, "400",
-                          "Requisição malformada.", as);
-        return -1;
+
+  if (buffer_received_request[current] != '\r' &&
+      buffer_received_request[current + 1] != '\n') {
+    while (true) {
+      while (buffer_received_request[current] != ':') {
+        current++;
+        if (current >= size_received_request) {
+          set_request_error(request_obj, err_request, "400",
+                            "Requisição malformada.", as);
+          return -1;
+        }
       }
-    }
-    char *field_name = ArenaS_Alocar(as, current - start + 1);
-    strncpy(field_name, &buffer_received_request[start], current - start);
-    field_name[current - start] = '\0';
-    current++;
-    start = current;
-
-    while (buffer_received_request[current] == ' ') {
+      char *field_name = ArenaS_Alocar(as, current - start + 1);
+      strncpy(field_name, &buffer_received_request[start], current - start);
+      field_name[current - start] = '\0';
       current++;
-      if (current >= size_received_request) {
-        set_request_error(request_obj, err_request, "400",
-                          "Requisição malformada.", as);
-        return -1;
+      start = current;
+
+      while (buffer_received_request[current] == ' ') {
+        current++;
+        if (current >= size_received_request) {
+          set_request_error(request_obj, err_request, "400",
+                            "Requisição malformada.", as);
+          return -1;
+        }
       }
-    }
-    start = current;
+      start = current;
 
-    while (buffer_received_request[current] != '\r' &&
-           buffer_received_request[current] != '\n') {
-      current++;
-      if (current >= size_received_request) {
-        set_request_error(request_obj, err_request, "400",
-                          "Requisição malformada.", as);
-        return -1;
+      while (buffer_received_request[current] != '\r' &&
+             buffer_received_request[current] != '\n') {
+        current++;
+        if (current >= size_received_request) {
+          set_request_error(request_obj, err_request, "400",
+                            "Requisição malformada.", as);
+          return -1;
+        }
       }
-    }
-    char *field_value = ArenaS_Alocar(as, current - start + 1);
-    strncpy(field_value, &buffer_received_request[start], current - start);
-    field_value[current - start] = '\0';
-    start = current;
+      char *field_value = ArenaS_Alocar(as, current - start + 1);
+      strncpy(field_value, &buffer_received_request[start], current - start);
+      field_value[current - start] = '\0';
+      start = current;
 
-    validate_and_set_headers(*request_obj, field_name, field_value, as);
+      validate_and_set_headers(*request_obj, field_name, field_value, as);
 
-    if (strncmp(&buffer_received_request[start], "\r\n", 2) == 0) {
-      start += 2;
-      current = start;
       if (strncmp(&buffer_received_request[start], "\r\n", 2) == 0) {
         start += 2;
         current = start;
-        break;
+        if (strncmp(&buffer_received_request[start], "\r\n", 2) == 0) {
+          start += 2;
+          current = start;
+          break;
+        }
       }
     }
   }
