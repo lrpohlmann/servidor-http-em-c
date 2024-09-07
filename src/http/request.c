@@ -52,34 +52,78 @@ static int parse_url(char *url, int size, Request *request_obj,
       char *segment = (char *)ArenaS_Alocar(as, 2);
       strncpy(segment, "/", 2);
       add_url_segment(request_obj, segment, as);
+    } else if (url[start] == '?') {
       start++;
-      if (url[start] == '?') {
-        return 0;
-      }
-      continue;
-    }
+      end = start;
+      while (true) {
+        if (start >= size) {
+          return 0;
+        }
 
-    end = start;
-    while (true) {
-      if (url[end] == '/') {
-        char *segment = (char *)ArenaS_Alocar(as, end - start + 1);
-        strncpy(segment, &url[start], end - start);
-        segment[end - start] = '\0';
-        add_url_segment(request_obj, segment, as);
+        while (url[end] != '=') {
+          end++;
+          if (end >= size) {
+            return -1;
+          }
+        }
+
+        char *param_name = ArenaS_Alocar(as, end - start + 1);
+        strncpy(param_name, &url[start], end - start);
+        param_name[end - start] = '\0';
+
+        end++;
         start = end;
-        break;
-      } else if (url[end] == '?' || end >= size) {
-        char *segment = (char *)ArenaS_Alocar(as, end - start + 1);
-        strncpy(segment, &url[start], end - start);
-        segment[end - start] = '\0';
-        add_url_segment(request_obj, segment, as);
-        return 0;
-      }
+        if (end >= size) {
+          return -1;
+        }
 
-      end++;
+        while (url[end] != '&' && end < size) {
+          end++;
+        }
+
+        char *param_value = ArenaS_Alocar(as, end - start + 1);
+        strncpy(param_value, &url[start], end - start);
+        param_value[end - start] = '\0';
+
+        end++;
+        start = end;
+
+        printf("%s=%s\n", param_name, param_value);
+      }
+    } else {
+      while (url[end] != '/' && url[end] != '?' && end < size) {
+        end++;
+      }
+      char *segment = ArenaS_Alocar(as, end - start + 1);
+      strncpy(segment, &url[start], end - start);
+      segment[end - start] = '\0';
+
+      start = end;
     }
+    start++;
+    end = start;
+    continue;
   }
 
+  end = start;
+  while (true) {
+    if (url[end] == '/') {
+      char *segment = (char *)ArenaS_Alocar(as, end - start + 1);
+      strncpy(segment, &url[start], end - start);
+      segment[end - start] = '\0';
+      add_url_segment(request_obj, segment, as);
+      start = end;
+      break;
+    } else if (url[end] == '?' || end >= size) {
+      char *segment = (char *)ArenaS_Alocar(as, end - start + 1);
+      strncpy(segment, &url[start], end - start);
+      segment[end - start] = '\0';
+      add_url_segment(request_obj, segment, as);
+      return 0;
+    }
+
+    end++;
+  }
   return 0;
 }
 

@@ -8,7 +8,8 @@
 
 int main(int argc, char *argv[]) {
   char buf_recebido[] =
-      "GET / HTTP/1.1\r\nHost: localhost:9500\r\nUser-Agent: Mozilla/5.0 (X11; "
+      "GET /user?name=leonardo HTTP/1.1\r\nHost: localhost:9500\r\nUser-Agent: "
+      "Mozilla/5.0 (X11; "
       "Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0\r\nAccept: "
       "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/"
       "webp,image/png,image/svg+xml,*/*;q=0.8\r\nAccept-Language: "
