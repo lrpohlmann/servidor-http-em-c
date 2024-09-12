@@ -52,6 +52,8 @@ static int parse_url(char *url, int size, Request *request_obj,
       char *segment = (char *)ArenaS_Alocar(as, 2);
       strncpy(segment, "/", 2);
       add_url_segment(request_obj, segment, as);
+      start++;
+      end = start;
     } else if (url[start] == '?') {
       start++;
       end = start;
@@ -88,7 +90,7 @@ static int parse_url(char *url, int size, Request *request_obj,
         end++;
         start = end;
 
-        printf("%s=%s\n", param_name, param_value);
+        QueryString_Set(request_obj, param_name, param_value, as);
       }
     } else {
       while (url[end] != '/' && url[end] != '?' && end < size) {
@@ -97,11 +99,10 @@ static int parse_url(char *url, int size, Request *request_obj,
       char *segment = ArenaS_Alocar(as, end - start + 1);
       strncpy(segment, &url[start], end - start);
       segment[end - start] = '\0';
+      add_url_segment(request_obj, segment, as);
 
       start = end;
     }
-    start++;
-    end = start;
     continue;
   }
 
@@ -221,6 +222,69 @@ static void set_request_error(Request **request_obj, ErrorRequest **err_request,
 /*
  * public interface
  */
+
+int QueryString_Get(Request *request, char *key, char **ptr_found_value) {
+  *ptr_found_value = NULL;
+  QuerystringKeyValue *current = request->querystring;
+  while (current != NULL) {
+    if (strcmp(key, current->key) == 0) {
+      *ptr_found_value = current->key;
+      return 0;
+    }
+
+    current = current->next;
+  }
+
+  return -1;
+}
+
+void QueryString_Set(Request *request, char *key, char *value,
+                     ArenaSimples *as) {
+  assert(key != NULL);
+  assert(value != NULL);
+
+  int len_key = strlen(key);
+  int len_value = strlen(value);
+
+  if (request->querystring == NULL) {
+    QuerystringKeyValue *new_key_value =
+        (QuerystringKeyValue *)ArenaS_Alocar(as, sizeof(QuerystringKeyValue));
+    char *new_key = ArenaS_Alocar(as, len_key + 1);
+    char *new_value = ArenaS_Alocar(as, len_value + 1);
+    strncpy(new_key, key, len_key + 1);
+    new_key[len_key] = '\0';
+    strncpy(new_value, value, len_value + 1);
+    new_value[len_value] = '\0';
+    new_key_value->key = new_key;
+    new_key_value->value = new_value;
+
+    request->querystring = new_key_value;
+    return;
+  }
+
+  QuerystringKeyValue *current = request->querystring;
+  while (current != NULL) {
+    if (strcmp(key, current->key) == 0) {
+      char *new_value = ArenaS_Alocar(as, len_value);
+      strncpy(new_value, value, len_value);
+      current->value = new_value;
+      return;
+    } else if (current->next == NULL) {
+      QuerystringKeyValue *new_key_value =
+          (QuerystringKeyValue *)ArenaS_Alocar(as, sizeof(QuerystringKeyValue));
+      char *new_key = ArenaS_Alocar(as, len_key);
+      char *new_value = ArenaS_Alocar(as, len_value);
+      strncpy(new_key, key, len_key);
+      strncpy(new_value, value, len_value);
+      new_key_value->key = new_key;
+      new_key_value->value = new_value;
+      current->next = new_key_value;
+      return;
+    }
+
+    current = current->next;
+  }
+}
 
 char *HTTP_ReceiveRequest(int accept_fd, size_t *total_recv_received_bytes) {
   size_t buffer_size = REQUEST_BUFFER_BASE_SIZE;

@@ -11,6 +11,12 @@ typedef struct url_segment_node {
   struct url_segment_node *next;
 } UrlSegment;
 
+typedef struct querystring_node {
+  char *key;
+  char *value;
+  struct querystring_node *next;
+} QuerystringKeyValue;
+
 typedef struct {
   char *cache_control;
   char *connection;
@@ -48,6 +54,7 @@ typedef struct {
 typedef struct {
   char *method;
   UrlSegment *url;
+  QuerystringKeyValue *querystring;
   char *http_version;
   GeneralHeader general_header;
   RequestHeader request_header;
@@ -57,6 +64,11 @@ typedef struct {
   char status[4];
   char *descricao;
 } ErrorRequest;
+
+int QueryString_Get(Request *request, char *key, char **ptr_found_value);
+
+void QueryString_Set(Request *request, char *key, char *value,
+                     ArenaSimples *as);
 
 char *HTTP_ReceiveRequest(int accept_fd, size_t *total_bytes_recebidos);
 

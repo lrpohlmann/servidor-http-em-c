@@ -26,7 +26,16 @@ int main(int argc, char *argv[]) {
   HTTP_ParseRequest(buf_recebido, strlen(buf_recebido), &request_obj,
                     &err_request, &as);
   assert(strcmp(request_obj->method, "GET") == 0);
+
+  // url
   assert(strcmp(request_obj->url->segment, "/") == 0);
+  assert(strcmp(request_obj->url->next->segment, "user") == 0);
+  assert(request_obj->url->next->next == NULL);
+  // querystring
+  assert(strcmp(request_obj->querystring->key, "name") == 0);
+  assert(strcmp(request_obj->querystring->value, "leonardo") == 0);
+  assert(request_obj->querystring->next == NULL);
+
   assert(strcmp(request_obj->http_version, "HTTP/1.1") == 0);
 
   assert(strcmp(request_obj->general_header.connection, "keep-alive"));
