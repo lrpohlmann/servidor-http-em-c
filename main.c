@@ -1,6 +1,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,40 +9,12 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "src/alloc/arena.h"
+#include "src/http/request.h"
+
 void crash(const char *e) {
   perror(e);
   exit(EXIT_FAILURE);
-}
-
-char *HTTP_ReceberMensagem(int accept_fd) {
-  size_t tamanho_buf = 1024;
-  char *buf_recv = (char *)malloc(tamanho_buf);
-  ssize_t total_bytes_recebidos = 0;
-  while (1) {
-    ssize_t bytes_recebidos =
-        recv(accept_fd, (void *)&buf_recv[total_bytes_recebidos], 1024, 0);
-    if (bytes_recebidos == -1) {
-      crash("recv");
-    } else if (bytes_recebidos == 0) {
-      break;
-    } else if (bytes_recebidos < tamanho_buf) {
-      total_bytes_recebidos += bytes_recebidos;
-      break;
-    } else {
-      total_bytes_recebidos += bytes_recebidos;
-      if (total_bytes_recebidos >= tamanho_buf) {
-        tamanho_buf += tamanho_buf;
-        char *novo_buf = (char *)realloc(buf_recv, tamanho_buf);
-        buf_recv = novo_buf;
-      }
-    }
-  }
-
-  for (int i = 0; i < total_bytes_recebidos; i++) {
-    printf("%c", buf_recv[i]);
-  }
-
-  return buf_recv;
 }
 
 int main() {
@@ -84,6 +57,8 @@ int main() {
     crash("listen");
   }
 
+  char *buf = (char *)malloc(2048);
+  ArenaSimples arena = {.buf = buf, .posicao = 0, .capacidade = 2048};
   while (1) {
     struct sockaddr_storage endereco_cliente;
     socklen_t t = sizeof(endereco_cliente);
@@ -93,7 +68,30 @@ int main() {
       continue;
     }
 
-    char *buf_recv = HTTP_ReceberMensagem(accept_fd);
+    size_t bytes_recebidos = 0;
+    char *buf_recv = HTTP_ReceiveRequest(accept_fd, &bytes_recebidos);
+    if (buf_recv == NULL) {
+      // browser doesn't show this. Says that the connection was reset
+      char resposta[] = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: "
+                        "text/html\r\n\r\n<html><body><h1>HTTP 413 - Payload "
+                        "Too Large</h1></body></html>";
+      ssize_t bytes_enviados = send(accept_fd, resposta, strlen(resposta), 0);
+      if (bytes_enviados == -1) {
+        crash("send");
+      }
+      close(accept_fd);
+      arena.posicao = 0;
+      continue;
+    }
+
+    ErrorRequest *err_request;
+    Request *request_obj;
+    int status_analise_request = HTTP_ParseRequest(
+        buf_recv, bytes_recebidos, &request_obj, &err_request, &arena);
+    if (status_analise_request != 0) {
+      printf("ERRO\n");
+    }
+
     free((void *)buf_recv);
 
     char resposta[] = "HTTP/1.1 200 OK\r\nContent-Type: "
@@ -104,8 +102,10 @@ int main() {
     }
 
     close(accept_fd);
+    arena.posicao = 0;
   }
 
+  free((void *)buf);
   freeaddrinfo(r);
 
   return 0;
