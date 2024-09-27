@@ -69,7 +69,7 @@ static int parse_url(char *url, int size, Request *request_obj,
           }
         }
 
-        char *param_name = ArenaS_Alocar(as, end - start + 1);
+        char param_name[end - start + 1];
         strncpy(param_name, &url[start], end - start);
         param_name[end - start] = '\0';
 
@@ -83,7 +83,7 @@ static int parse_url(char *url, int size, Request *request_obj,
           end++;
         }
 
-        char *param_value = ArenaS_Alocar(as, end - start + 1);
+        char param_value[end - start + 1];
         strncpy(param_value, &url[start], end - start);
         param_value[end - start] = '\0';
 
@@ -467,7 +467,7 @@ int HTTP_ParseRequest(char *buffer_received_request,
           return -1;
         }
       }
-      char *field_name = ArenaS_Alocar(as, current - start + 1);
+      char field_name[current - start + 1];
       strncpy(field_name, &buffer_received_request[start], current - start);
       field_name[current - start] = '\0';
       current++;
@@ -492,7 +492,7 @@ int HTTP_ParseRequest(char *buffer_received_request,
           return -1;
         }
       }
-      char *field_value = ArenaS_Alocar(as, current - start + 1);
+      char field_value[current - start + 1];
       strncpy(field_value, &buffer_received_request[start], current - start);
       field_value[current - start] = '\0';
       start = current;
