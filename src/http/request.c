@@ -17,6 +17,12 @@ static void init_request_obj(Request *request) {
   request->url = NULL;
   request->method = NULL;
   request->http_version = NULL;
+  request->querystring = NULL;
+  request->request_header = (RequestHeader){
+      NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+      NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+  request->general_header =
+      (GeneralHeader){NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
 }
 
 static UrlSegment *add_url_segment(Request *request, char *url,
