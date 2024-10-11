@@ -65,6 +65,8 @@ typedef struct {
   char *descricao;
 } ErrorRequest;
 
+void RequestInit(Request *request);
+
 int QueryString_Get(Request *request, char *key, char **ptr_found_value);
 
 void QueryString_Set(Request *request, char *key, char *value,

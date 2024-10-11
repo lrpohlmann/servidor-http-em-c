@@ -6,12 +6,13 @@
 #include "../src/http/response.h"
 
 int main(void) {
-  Request *request;
+  Request request;
+  RequestInit(&request);
   ArenaSimples as;
   as.buf = malloc(2000);
   as.posicao = 0;
   as.capacidade = 2000;
-  ResponseOutput *output = Home(request, &as);
+  ResponseOutput *output = Home(&request, &as);
   assert(output != NULL);
 
   free(as.buf);
