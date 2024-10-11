@@ -11,6 +11,7 @@
 
 #include "src/alloc/arena.h"
 #include "src/http/request.h"
+#include "src/http/response.h"
 
 void crash(const char *e) {
   perror(e);
@@ -94,12 +95,17 @@ int main() {
 
     free((void *)buf_recv);
 
-    char resposta[] = "HTTP/1.1 200 OK\r\nContent-Type: "
-                      "text/html\r\n\r\n<h1>Servidor HTTP, ao seu dispor</h1>";
-    ssize_t bytes_enviados = send(accept_fd, resposta, strlen(resposta), 0);
+    ArenaSimples as_response = {
+        .buf = malloc(500), .posicao = 0, .capacidade = 500};
+    ResponseOutput *respose = Home(request_obj, &as_response);
+
+    ssize_t bytes_enviados =
+        send(accept_fd, respose->message, respose->b_size, 0);
     if (bytes_enviados == -1) {
       crash("send");
     }
+
+    free(as_response.buf);
 
     close(accept_fd);
     arena.posicao = 0;
