@@ -14,11 +14,13 @@ int main(void) {
   as.posicao = 0;
   as.capacidade = 2000;
   ResponseOutput *output = Home(&request, &as);
-  assert(
-      strcmp(
-          output->message,
-          "HTTP/1.1 200 OK \r\n\r\n<html><h1>Servidor On-line!</h1></html>") ==
-      0);
+
+  char expected[] = "HTTP/1.1 200 OK\r\nContent-Type: text/html; "
+                    "charset=UTF-8\r\nContent-Length: "
+                    "39\r\n\r\n<html><h1>Servidor On-line!</h1></html>";
+
+  int test = strcmp(output->message, expected);
+  assert(test == 0);
 
   free(as.buf);
   return 0;
