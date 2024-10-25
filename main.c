@@ -66,8 +66,6 @@ int main() {
     crash("listen");
   }
 
-  char *buf = (char *)malloc(2048);
-  ArenaSimples arena = {.buf = buf, .posicao = 0, .capacidade = 2048};
   while (1) {
     struct sockaddr_storage endereco_cliente;
     socklen_t t = sizeof(endereco_cliente);
@@ -76,6 +74,9 @@ int main() {
       perror("accept");
       continue;
     }
+
+    char *buf = (char *)malloc(4096);
+    ArenaSimples arena = {.buf = buf, .posicao = 0, .capacidade = 4096};
 
     size_t bytes_recebidos = 0;
     char *buf_recv = HTTP_ReceiveRequest(accept_fd, &bytes_recebidos);
@@ -88,8 +89,9 @@ int main() {
       if (bytes_enviados == -1) {
         crash("send");
       }
+      free(buf);
+      free(buf_recv);
       close(accept_fd);
-      arena.posicao = 0;
       continue;
     }
 
@@ -103,14 +105,12 @@ int main() {
 
     free((void *)buf_recv);
 
-    ArenaSimples as_response = {
-        .buf = malloc(500), .posicao = 0, .capacidade = 500};
     ResponseOutput *response;
     View view = Routing_GetRoute(request_obj, &root_route);
     if (view == NULL) {
-      response = NotFound404View(request_obj, &as_response);
+      response = NotFound404View(request_obj, &arena);
     } else {
-      response = view(request_obj, &as_response);
+      response = view(request_obj, &arena);
     }
 
     ssize_t bytes_enviados =
@@ -119,13 +119,11 @@ int main() {
       crash("send");
     }
 
-    free(as_response.buf);
-
+    free(buf);
     close(accept_fd);
     arena.posicao = 0;
   }
 
-  free((void *)buf);
   freeaddrinfo(r);
 
   return 0;
