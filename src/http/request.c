@@ -13,18 +13,6 @@
  * internals
  */
 
-static void init_request_obj(Request *request) {
-  request->url = NULL;
-  request->method = NULL;
-  request->http_version = NULL;
-  request->querystring = NULL;
-  request->request_header = (RequestHeader){
-      NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-      NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-  request->general_header =
-      (GeneralHeader){NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
-}
-
 static UrlSegment *add_url_segment(Request *request, char *url,
                                    ArenaSimples *as) {
   UrlSegment *new_segment = (UrlSegment *)ArenaS_Alocar(as, sizeof(UrlSegment));
@@ -229,6 +217,18 @@ static void set_request_error(Request **request_obj, ErrorRequest **err_request,
  * public interface
  */
 
+void RequestInit(Request *request) {
+  request->url = NULL;
+  request->method = NULL;
+  request->http_version = NULL;
+  request->querystring = NULL;
+  request->request_header = (RequestHeader){
+      NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+      NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+  request->general_header =
+      (GeneralHeader){NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+}
+
 int QueryString_Get(Request *request, char *key, char **ptr_found_value) {
   *ptr_found_value = NULL;
   QuerystringKeyValue *current = request->querystring;
@@ -338,7 +338,7 @@ int HTTP_ParseRequest(char *buffer_received_request,
                       ErrorRequest **err_request, ArenaSimples *as) {
 
   *request_obj = (Request *)ArenaS_Alocar(as, sizeof(Request));
-  init_request_obj(*request_obj);
+  RequestInit(*request_obj);
   *err_request = NULL;
 
   // request-line
