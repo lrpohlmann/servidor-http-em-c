@@ -28,3 +28,5 @@ typedef struct {
 } ResponseOutput;
 
 ResponseOutput *Home(Request *request, ArenaSimples *as);
+
+ResponseOutput *NotFound404View(Request *request, ArenaSimples *arena);

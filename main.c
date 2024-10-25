@@ -12,6 +12,7 @@
 #include "src/alloc/arena.h"
 #include "src/http/request.h"
 #include "src/http/response.h"
+#include "src/routing/routing.h"
 
 void crash(const char *e) {
   perror(e);
@@ -19,6 +20,13 @@ void crash(const char *e) {
 }
 
 int main() {
+  /* Routes */
+
+  RouteNode root_route = {
+      .url = "/", .view = Home, .number_of_child_url_segments = 0};
+
+  /* End of Routes */
+
   struct addrinfo base;
   memset(&base, 0, sizeof(base));
   base.ai_family = AF_INET;       // IPv4
@@ -97,10 +105,16 @@ int main() {
 
     ArenaSimples as_response = {
         .buf = malloc(500), .posicao = 0, .capacidade = 500};
-    ResponseOutput *respose = Home(request_obj, &as_response);
+    ResponseOutput *response;
+    View view = Routing_GetRoute(request_obj, &root_route);
+    if (view == NULL) {
+      response = NotFound404View(request_obj, &as_response);
+    } else {
+      response = view(request_obj, &as_response);
+    }
 
     ssize_t bytes_enviados =
-        send(accept_fd, respose->message, respose->b_size, 0);
+        send(accept_fd, response->message, response->b_size, 0);
     if (bytes_enviados == -1) {
       crash("send");
     }

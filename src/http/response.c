@@ -79,3 +79,21 @@ ResponseOutput *Home(Request *request, ArenaSimples *arena) {
   rout->b_size = response_length;
   return rout;
 }
+
+ResponseOutput *NotFound404View(Request *request, ArenaSimples *arena) {
+  ResponseOutput *output =
+      (ResponseOutput *)ArenaS_Alocar(arena, sizeof(ResponseOutput));
+  char start_line[] =
+      "HTTP/1.1 404 Not Found\r\nServer: MulaServer/0.1\r\nContent-Type: "
+      "text/html; charset=UTF-8\r\n\r\n<html><head></head><body><h1>404 Não "
+      "Encontrado</h1></body></html>";
+  size_t start_line_length = strlen(start_line);
+
+  char *http = ArenaS_Alocar(arena, start_line_length);
+  strncpy(http, start_line, start_line_length);
+
+  output->b_size = start_line_length;
+  output->message = http;
+
+  return output;
+}

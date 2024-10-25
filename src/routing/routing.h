@@ -1,3 +1,5 @@
+#pragma once
+
 #include "../alloc/arena.h"
 #include "../http/request.h"
 #include "../http/response.h"
