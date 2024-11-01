@@ -72,7 +72,8 @@ int QueryString_Get(Request *request, char *key, char **ptr_found_value);
 void QueryString_Set(Request *request, char *key, char *value,
                      ArenaSimples *as);
 
-char *HTTP_ReceiveRequest(int accept_fd, size_t *total_bytes_recebidos);
+char *HTTP_ReceiveRequest(int accept_fd, size_t *total_bytes_recebidos,
+                          ArenaSimples *as);
 
 int HTTP_ParseRequest(char *buf_request_recebida,
                       size_t tamanho_request_recebida, Request **request_obj,

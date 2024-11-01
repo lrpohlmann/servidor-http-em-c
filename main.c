@@ -79,7 +79,7 @@ int main() {
     ArenaSimples arena = {.buf = buf, .posicao = 0, .capacidade = 4096};
 
     size_t bytes_recebidos = 0;
-    char *buf_recv = HTTP_ReceiveRequest(accept_fd, &bytes_recebidos);
+    char *buf_recv = HTTP_ReceiveRequest(accept_fd, &bytes_recebidos, &arena);
     if (buf_recv == NULL) {
       // browser doesn't show this. Says that the connection was reset
       char resposta[] = "HTTP/1.1 413 Payload Too Large\r\nContent-Type: "
@@ -90,7 +90,6 @@ int main() {
         crash("send");
       }
       free(buf);
-      free(buf_recv);
       close(accept_fd);
       continue;
     }
@@ -102,8 +101,6 @@ int main() {
     if (status_analise_request != 0) {
       printf("ERRO\n");
     }
-
-    free((void *)buf_recv);
 
     ResponseOutput *response;
     View view = Routing_GetRoute(request_obj, &root_route);
@@ -121,7 +118,6 @@ int main() {
 
     free(buf);
     close(accept_fd);
-    arena.posicao = 0;
   }
 
   freeaddrinfo(r);

@@ -292,15 +292,17 @@ void QueryString_Set(Request *request, char *key, char *value,
   }
 }
 
-char *HTTP_ReceiveRequest(int accept_fd, size_t *total_recv_received_bytes) {
+char *HTTP_ReceiveRequest(int accept_fd, size_t *total_recv_received_bytes,
+                          ArenaSimples *arena) {
   size_t buffer_size = REQUEST_BUFFER_BASE_SIZE;
-  char *buffer = (char *)malloc(buffer_size);
+  char *first_buffer = ArenaS_Alocar(arena, buffer_size);
+  char *current_buffer = first_buffer;
 
   *total_recv_received_bytes = 0;
   while (1) {
 
     ssize_t received_bytes =
-        recv(accept_fd, (void *)&buffer[*total_recv_received_bytes],
+        recv(accept_fd, (void *)&current_buffer[*total_recv_received_bytes],
              REQUEST_BUFFER_BASE_SIZE, 0);
     if (received_bytes == -1) {
       perror("recv");
@@ -312,25 +314,23 @@ char *HTTP_ReceiveRequest(int accept_fd, size_t *total_recv_received_bytes) {
     // receiving less than the expected means no more data expected
     // (currently... ?)
     if (received_bytes < REQUEST_BUFFER_BASE_SIZE) {
-      return buffer;
+      return first_buffer;
     }
 
     if (received_bytes == REQUEST_BUFFER_BASE_SIZE) {
       buffer_size += REQUEST_BUFFER_BASE_SIZE;
       if (buffer_size > MAX_REQUEST_SIZE) {
-        free(buffer);
         return NULL;
       }
 
-      char *resized_buf = realloc(buffer, buffer_size);
-      buffer = resized_buf;
+      current_buffer = ArenaS_Alocar(arena, buffer_size);
       continue;
     }
 
     assert(received_bytes <= REQUEST_BUFFER_BASE_SIZE);
   }
 
-  return buffer;
+  return first_buffer;
 }
 
 int HTTP_ParseRequest(char *buffer_received_request,
